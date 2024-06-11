@@ -12,9 +12,9 @@ precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
 
-#lookup table
-codes = ['Cloud development not observed or not observable', 'Clouds generally dissolving or becoming less developed',
-         'State of sky on the whole unchanged', 'Clouds generally forming or developing']
+#lookup table - not done
+codes = ['']
+
 class WeatherApp(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
@@ -43,6 +43,7 @@ class WeatherApp(tk.Tk):
         print_button = tk.Button(self, text="Print", command=self.print_text)
         print_button.pack()
 
+    #parses file and sorts data by type
     def write_file(self, input):
       index = 0
       lines = input.split('\n')
