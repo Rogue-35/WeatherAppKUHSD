@@ -143,35 +143,40 @@ class WeatherApp(tk.Tk):
 
     #parses file and sorts data by type
     def write_file(self, input):
-      index = 0
-      lines = input.split('\n')
-      for line in lines:
-        parts = line.split(': ')
-        key = parts[0]
-        values = parts[1].split()
+        global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
+        index = 0
+        lines = input.split('\n')
+        for line in lines:
+            parts = line.split(': ')
+            if len(parts) != 2:
+                print("Error splitting line:", line)
+                continue
 
-        if key == 'date':
-          dates = values
-        elif key == 'weather_code':
-          weatherCode = values
-        elif key == 'temperature_max':
-          temperatureMax = values
-        elif key == 'temperature_min':
-          temperatureMin = values
-        elif key == 'precipitation_sum':
-          precipitationSum = values
-        elif key == 'wind_speed_max':
-          windSpeedMax = values
-        elif key == 'precipitation_probability_max':
-          precipitationProbabilityMax = values
+            key = parts[0]
+            values = parts[1].split()
 
-      print("Dates: ",dates)
-      print("Weather Codes: ",weatherCode)
-      print("Max Temperatures: ",temperatureMax)
-      print("Min Temperatures: ",temperatureMin)
-      print("Precipitation Sum: ",precipitationSum)
-      print("Max Wind Speed: ",windSpeedMax)
-      print("Precipitation Probability Max: ",precipitationProbabilityMax)
+            if key == 'date':
+                dates = values
+            elif key == 'weather_code':
+                weatherCode = values
+            elif key == 'temperature_max':
+                temperatureMax = values
+            elif key == 'temperature_min':
+                temperatureMin = values
+            elif key == 'precipitation_sum':
+                precipitationSum = values
+            elif key == 'wind_speed_max':
+                windSpeedMax = values
+            elif key == 'precipitation_probability_max':
+                precipitationProbabilityMax = values
+
+        print("Dates: ", dates)
+        print("Weather Codes: ", weatherCode)
+        print("Max Temperatures: ", temperatureMax)
+        print("Min Temperatures: ", temperatureMin)
+        print("Precipitation Sum: ", precipitationSum)
+        print("Max Wind Speed: ", windSpeedMax)
+        print("Precipitation Probability Max: ", precipitationProbabilityMax)
 
     #uploads file
     def upload_file(self):
