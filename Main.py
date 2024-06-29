@@ -111,13 +111,13 @@ codes = ['Cloud development not observed or not observable during the past hour'
         'Shower(s) of hail, with or without rain or rain and snow mixed, not associated with thunder moderate or heavy',
         'Slight rain at time of observation Thunderstorm during the preceding hour but not at time of observation',
         'Moderate or heavy rain at time of observation Thunderstorm during the preceding hour but not at time of observation',
-        'Slight snow, or rain and snow mixed or hail(Hail, small hail, snow pellets) at time of observation Thunderstorm during the preceding hour but not at time of observation',
+        'Slight snow, or rain and snow mixed or hail (Hail, small hail, snow pellets) at time of observation Thunderstorm during the preceding hour but not at time of observation',
         'Moderate or heavy snow, or rain and snow mixed or hail(Hail, small hail, snow pellets) at time of observation Thunderstorm during the preceding hour but not at time of observation',
         'Thunderstorm, slight or moderate, without hail(Hail, small hail, snow pellets) but with rain and/or snow at time of observation',
         'Thunderstorm, slight or moderate, with hail(Hail, small hail, snow pellets) at time of observation',
-        'Thunderstorm, heavy, without hail(Hail, small hail, snow pellets) but with rain and/or snow at time of observation',
+        'Thunderstorm, heavy, without hail (Hail, small hail, snow pellets) but with rain and/or snow at time of observation',
         'Thunderstorm combined with duststorm or sandstorm at time of observation',
-        'Thunderstorm, heavy, with hail(Hail, small hail, snow pellets) at time of observation'
+        'Thunderstorm, heavy, with hail (Hail, small hail, snow pellets) at time of observation'
         ]
 
 
