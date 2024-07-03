@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import ttk, filedialog, messagebox
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 dates = []
 weatherCode = []
@@ -124,7 +124,7 @@ class App(ttk.Frame):
             self.rowconfigure(index=index, weight=1)
 
         # Create value lists
-        self.data_type_list = ['Temp Min', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
+        self.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
 
         # Create widgets
         self.setup_widgets()
@@ -133,7 +133,7 @@ class App(ttk.Frame):
         # Create a Frame for input widgets
         self.header_frame = ttk.Frame(self, padding=(10, 10, 110, 10))
         self.header_frame.grid(
-            row=0, column=0, padx=10, pady=(30, 10), sticky="nsew", rowspan=3
+            row=0, column=0, padx=10, pady=(30, 10), sticky="nw", rowspan=3
         )
         self.header_frame.columnconfigure(index=0, weight=1)
 
@@ -143,12 +143,12 @@ class App(ttk.Frame):
 
         # Close Button
         self.close_button = ttk.Button(self.header_frame, text="Close", command=self.destroy)  # currently just closes setup instead of the whole App
-        self.close_button.grid(row=0, column=99, padx=5, pady=2, sticky="nsew")
+        self.close_button.grid(row=0, column=99, padx=5, pady=2, sticky="ne")
 
         # Body frame
-        self.body_frame = ttk.Frame(self, padding=(10, 10, 10, 10))
+        self.body_frame = ttk.Frame(self)
         self.body_frame.grid(
-            row=1, column=0, padx=10, pady=(30, 10), columnspan=10, sticky="nsew", rowspan=8
+            row=1, column=0, padx=10, pady=(30, 10), sticky="nsew"
         )
 
         # Notebook
@@ -162,26 +162,42 @@ class App(ttk.Frame):
             self.tab_1.rowconfigure(index=index, weight=1)
         self.notebook.add(self.tab_1, text="Tab 1")
 
-
-
         # Date dropdown
+
         self.weather_code_frame = ttk.LabelFrame(self.tab_1, text="Weather Code")
-        self.weather_code_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.weather_code_frame.grid(row=1, column=0, padx=0, pady=0, sticky = 'nwes')
 
         self.date_dropdown = ttk.Combobox(
             self.tab_1, state="readonly", values=dates
         )
-        self.date_dropdown.grid(row=0, column=0, sticky="ew")
+        self.date_dropdown.grid(row=0, column=0, padx=5, pady=5, sticky="n")
         self.date_dropdown.bind("<<ComboboxSelected>>", self.set_code)
 
         self.weather_code_text = ttk.Label(self.weather_code_frame, text='')
-        self.weather_code_text.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.weather_code_text.grid(row=0, column=0, padx=15, pady=5)
 
+        self.histogram_frame = ttk.LabelFrame(self.tab_1, text="Histogram")
+        self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nwe")
         # Data type dropdown
-        self.data_type_dropdown = ttk.Combobox(
-            self.tab_1, state="readonly", values=self.data_type_list
+        self.histogram_data_type_dropdown = ttk.Combobox(
+            self.histogram_frame, state="readonly", values=self.data_type_list
         )
-        self.data_type_dropdown.grid(row=2, column=0, padx=5, pady=90)
+        self.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
+        self.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+
+        self.histogram_start_date_dropdown = ttk.Combobox(
+            self.histogram_frame, state="readonly", values=dates
+        )
+        self.histogram_start_date_dropdown.grid(row=0, column=1, padx = 10, pady = 10)
+        self.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+        self.histogram_end_date_dropdown = ttk.Combobox(
+            self.histogram_frame, state="readonly", values=dates
+        )
+        self.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
+        self.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+
+        self.canvas = None
+
         # Tab #2
         self.tab_2 = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_2, text="Tab 2")
@@ -221,6 +237,8 @@ class App(ttk.Frame):
         print("Precipitation Probability Max: ", precipitationProbabilityMax)
 
         self.date_dropdown['values'] = dates
+        self.histogram_start_date_dropdown['values'] = dates
+        self.histogram_end_date_dropdown['values'] = dates
 
     # Uploads file
     def upload_file(self):
@@ -241,6 +259,54 @@ class App(ttk.Frame):
             weather_code = int(float(weatherCode[index]))
             self.weather_code_text.config(text=codes[weather_code])
 
+    def plot_histogram(self, event):
+        data_type = self.histogram_data_type_dropdown.get()
+        start_date = self.histogram_start_date_dropdown.get()
+        end_date = self.histogram_end_date_dropdown.get()
+
+        if data_type and start_date and end_date:
+            start_index = dates.index(start_date)
+            end_index = dates.index(end_date) + 1
+
+            if start_index < end_index:
+                data = {
+                    'Temp Low': temperatureMin[start_index:end_index],
+                    'Temp High': temperatureMax[start_index:end_index],
+                    'Precipitation Amount': precipitationSum[start_index:end_index],
+                    'Wind Speed': windSpeedMax[start_index:end_index],
+                    'Precipitation Probability': precipitationProbabilityMax[start_index:end_index]
+                }[data_type]
+
+                data = [float(d) for d in data]
+
+                # Plot data against dates
+                fig, ax = plt.subplots()
+                ax.bar(dates[start_index:end_index], data, color='blue')
+                ax.set_title(f'{data_type} over Time')
+                ax.set_xlabel('Date')
+                ax.set_ylabel(data_type)
+                plt.xticks(rotation=30)
+
+                # Aesthetics improvements
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['left'].set_visible(False)
+                ax.spines['bottom'].set_color('#DDDDDD')
+                ax.tick_params(colors='#777777', which='both')
+                ax.xaxis.label.set_color('#777777')
+                ax.yaxis.label.set_color('#777777')
+                ax.set_facecolor('#EEEEEE')
+
+                fig.tight_layout()
+
+                # Clear previous plot
+                if self.canvas:
+                    self.canvas.get_tk_widget().destroy()
+
+                self.canvas = FigureCanvasTkAgg(fig, master=self.histogram_frame)
+                self.canvas.draw()
+                self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("")
@@ -258,7 +324,7 @@ if __name__ == "__main__":
     x_cordinate = int((root.winfo_screenwidth() / 2) - (root.winfo_width() / 2))
     y_cordinate = int((root.winfo_screenheight() / 2) - (root.winfo_height() / 2))
     root.geometry("+{}+{}".format(x_cordinate, y_cordinate - 20))
-    root.geometry('800x600')
+    root.geometry('1600x1200')
     root.title('Weather App')
 
     root.mainloop()
