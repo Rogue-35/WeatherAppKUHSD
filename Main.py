@@ -13,7 +13,8 @@ precipitationProbabilityMax = []
 # variables for visualization
 endDate = -1
 startDate = -1
-# lookup table
+
+# lookup table somewhere it is messed up
 codes = ['Cloud development not observed or not observable during the past hour',
          'Clouds generally dissolving or becoming less developed during the past hour',
          'State of sky on the whole unchanged during the past hour',
@@ -176,7 +177,11 @@ class App(ttk.Frame):
         self.weather_code_text = ttk.Label(self.weather_code_frame, text='')
         self.weather_code_text.grid(row=0, column=0, padx=15, pady=5)
 
-        self.histogram_frame = ttk.LabelFrame(self.tab_1, text="Histogram")
+        # Tab #2
+        self.tab_2 = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_2, text="Tab 2")
+
+        self.histogram_frame = ttk.LabelFrame(self.tab_2, text="Histogram")
         self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nwe")
         # Data type dropdown
         self.histogram_data_type_dropdown = ttk.Combobox(
@@ -188,7 +193,7 @@ class App(ttk.Frame):
         self.histogram_start_date_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=dates
         )
-        self.histogram_start_date_dropdown.grid(row=0, column=1, padx = 10, pady = 10)
+        self.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
         self.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
         self.histogram_end_date_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=dates
@@ -197,11 +202,6 @@ class App(ttk.Frame):
         self.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
 
         self.canvas = None
-
-        # Tab #2
-        self.tab_2 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_2, text="Tab 2")
-
         # Tab #3
         self.tab_3 = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_3, text="Tab 3")
@@ -281,7 +281,7 @@ class App(ttk.Frame):
 
                 # Plot data against dates
                 fig, ax = plt.subplots()
-                ax.bar(dates[start_index:end_index], data, color='blue')
+                ax.plot(dates[start_index:end_index], data, marker="D")
                 ax.set_title(f'{data_type} over Time')
                 ax.set_xlabel('Date')
                 ax.set_ylabel(data_type)
@@ -306,6 +306,10 @@ class App(ttk.Frame):
                 self.canvas = FigureCanvasTkAgg(fig, master=self.histogram_frame)
                 self.canvas.draw()
                 self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
+                self.raw_data_text = ttk.Label(self.histogram_frame, text=data)
+                self.raw_data_text.grid(row=2, column=0, columnspan=3, pady=10, padx=10)
+                #self.date_text
+
 
 if __name__ == "__main__":
     root = tk.Tk()
