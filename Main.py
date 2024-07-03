@@ -43,6 +43,8 @@ codes = ['Cloud development not observed or not observable during the past hour'
          'Shower(s) of rain',
          'Shower(s) of snow, or of rain and snow',
          'Shower(s) of hail, or of rain and hail (Hail, small hail, snow pellets)',
+         'fog or ice fog',
+         'Thunderstorm (with or without precipitation)',
          'Slight or moderate duststorm or sandstorm has decreased during the preceding hour',
          'Slight or moderate duststorm or sandstorm no appreciable change during the preceding hour',
          'Slight or moderate duststorm or sandstorm has begun or has increased during the preceding hour',
