@@ -128,7 +128,8 @@ class App(ttk.Frame):
 
         # Create value lists
         self.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
-
+        self.data_type_list_complete=['Weather Code','Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
+        self.data_cat = ['Max', 'Min', 'Mean', 'Single']
         # Create widgets
         self.setup_widgets()
 
@@ -170,14 +171,22 @@ class App(ttk.Frame):
         self.weather_code_frame = ttk.LabelFrame(self.tab_1, text="Weather Code")
         self.weather_code_frame.grid(row=1, column=0, padx=0, pady=0, sticky = 'nwes')
 
-        self.date_dropdown = ttk.Combobox(
+        self.start_date_dropdown = ttk.Combobox(
             self.tab_1, state="readonly", values=dates
         )
-        self.date_dropdown.grid(row=0, column=0, padx=5, pady=5, sticky="n")
-        self.date_dropdown.bind("<<ComboboxSelected>>", self.set_code)
+        self.start_date_dropdown.grid(row=0, column=2, padx=0, pady=5)
+        self.start_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
 
-        self.weather_code_text = ttk.Label(self.weather_code_frame, text='')
-        self.weather_code_text.grid(row=0, column=0, padx=15, pady=5)
+        self.data_dropdown = ttk.Combobox(
+            self.tab_1, state="readonly", values=self.data_type_list_complete
+        )
+        self.data_dropdown.grid(row=0, column=0, padx=0, pady=5)
+        self.data_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+
+
+
+        self.output_text = ttk.Label(self.weather_code_frame, text='')
+        self.output_text.grid(row=0, column=0, padx=15, pady=5)
 
         # Tab #2
         self.tab_2 = ttk.Frame(self.notebook)
@@ -185,6 +194,7 @@ class App(ttk.Frame):
 
         self.histogram_frame = ttk.LabelFrame(self.tab_2, text="Histogram")
         self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nwe")
+
         # Data type dropdown
         self.histogram_data_type_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=self.data_type_list
@@ -207,6 +217,41 @@ class App(ttk.Frame):
         # Tab #3
         self.tab_3 = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_3, text="Tab 3")
+
+    def data_test(self, event):
+        if self.data_dropdown.get() == "Weather Code":
+            if hasattr(self, 'data_cat_dropdown'):
+                self.data_cat_dropdown.grid_remove()
+            if hasattr(self, 'end_date_dropdown'):
+                self.end_date_dropdown.grid_remove()
+        else:
+            self.data_cat_dropdown = ttk.Combobox(
+                self.tab_1, state="readonly", values=self.data_cat
+            )
+            self.data_cat_dropdown.grid(row=0, column=1, padx=0, pady=5)
+            self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.stupid)
+        self.evaluate()
+
+    def stupid(self, event=None):
+        if self.data_cat_dropdown.get() == 'Single':
+            if hasattr(self, 'end_date_dropdown'):
+                self.end_date_dropdown.grid_remove()
+        else:
+            self.end_date_dropdown = ttk.Combobox(
+                self.tab_1, state="readonly", values=dates
+            )
+            self.end_date_dropdown.grid(row=0, column=3, padx=0, pady=5)
+            self.end_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+
+    def evaluate(self):
+        if self.data_dropdown.get() == "Weather Code":
+            selected_date = self.start_date_dropdown.get()
+            if selected_date in dates:
+                index = dates.index(selected_date)
+                weather_code = int(float(weatherCode[index]))
+                self.output_text.config(text=codes[weather_code])
+        else:
+            return 0
 
     def write_file(self, input):
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
@@ -238,9 +283,11 @@ class App(ttk.Frame):
         print("Max Wind Speed: ", windSpeedMax)
         print("Precipitation Probability Max: ", precipitationProbabilityMax)
 
-        self.date_dropdown['values'] = dates
         self.histogram_start_date_dropdown['values'] = dates
         self.histogram_end_date_dropdown['values'] = dates
+        self.start_date_dropdown['values'] = dates
+        self.end_date_dropdown['values'] = dates
+
 
     # Uploads file
     def upload_file(self):
@@ -253,13 +300,6 @@ class App(ttk.Frame):
                     # messagebox.showinfo(title='File Uploaded', message='File successfully uploaded and parsed.')
             except FileNotFoundError:
                 messagebox.showerror(title='Error', message='Womp Womp')
-
-    def set_code(self, event):
-        selected_date = self.date_dropdown.get()
-        if selected_date in dates:
-            index = dates.index(selected_date)
-            weather_code = int(float(weatherCode[index]))
-            self.weather_code_text.config(text=codes[weather_code])
 
     def plot_histogram(self, event):
         data_type = self.histogram_data_type_dropdown.get()
