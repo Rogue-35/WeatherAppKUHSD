@@ -14,7 +14,7 @@ precipitationProbabilityMax = []
 endDate = -1
 startDate = -1
 
-# lookup table somewhere it is messed up
+# lookup table
 codes = ['Cloud development not observed or not observable during the past hour',
          'Clouds generally dissolving or becoming less developed during the past hour',
          'State of sky on the whole unchanged during the past hour',
