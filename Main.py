@@ -225,11 +225,14 @@ class App(ttk.Frame):
             if hasattr(self, 'end_date_dropdown'):
                 self.end_date_dropdown.grid_remove()
         else:
-            self.data_cat_dropdown = ttk.Combobox(
-                self.tab_1, state="readonly", values=self.data_cat
-            )
-            self.data_cat_dropdown.grid(row=0, column=1, padx=0, pady=5)
-            self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.stupid)
+            if not hasattr(self, 'data_cat_dropdown'):
+                self.data_cat_dropdown = ttk.Combobox(
+                    self.tab_1, state="readonly", values=self.data_cat
+                )
+                self.data_cat_dropdown.grid(row=0, column=1, padx=0, pady=5)
+                self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.stupid)
+            else:
+                self.data_cat_dropdown.grid()
         self.evaluate()
 
     def stupid(self, event=None):
@@ -237,11 +240,15 @@ class App(ttk.Frame):
             if hasattr(self, 'end_date_dropdown'):
                 self.end_date_dropdown.grid_remove()
         else:
-            self.end_date_dropdown = ttk.Combobox(
-                self.tab_1, state="readonly", values=dates
-            )
-            self.end_date_dropdown.grid(row=0, column=3, padx=0, pady=5)
-            self.end_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+            if not hasattr(self, 'end_date_dropdown'):
+                self.end_date_dropdown = ttk.Combobox(
+                    self.tab_1, state="readonly", values=dates
+                )
+                self.end_date_dropdown.grid(row=0, column=3, padx=0, pady=5)
+                self.end_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+            else:
+                self.end_date_dropdown.grid()
+        self.evaluate()
 
     def evaluate(self):
         if self.data_dropdown.get() == "Weather Code":
@@ -250,9 +257,121 @@ class App(ttk.Frame):
                 index = dates.index(selected_date)
                 weather_code = int(float(weatherCode[index]))
                 self.output_text.config(text=codes[weather_code])
-        else:
-            return 0
-
+        elif self.data_cat_dropdown.get() == "Single":
+            if self.data_dropdown.get() == "Temp Low":
+                selected_date = self.start_date_dropdown.get()
+                if selected_date in dates:
+                    index = dates.index(selected_date)
+                    self.output_text.config(text=temperatureMin[index])
+            elif self.data_dropdown.get() == "Temp High":
+                selected_date = self.start_date_dropdown.get()
+                if selected_date in dates:
+                    index = dates.index(selected_date)
+                    self.output_text.config(text=temperatureMax[index])
+            elif self.data_dropdown.get() == "Precipitation Amount":
+                selected_date = self.start_date_dropdown.get()
+                if selected_date in dates:
+                    index = dates.index(selected_date)
+                    self.output_text.config(text=precipitationSum[index])
+            elif self.data_dropdown.get() == "Wind Speed":
+                selected_date = self.start_date_dropdown.get()
+                if selected_date in dates:
+                    index = dates.index(selected_date)
+                    self.output_text.config(text=windSpeedMax[index])
+            elif self.data_dropdown.get() == "Precipitation Probability":
+                selected_date = self.start_date_dropdown.get()
+                if selected_date in dates:
+                    index = dates.index(selected_date)
+                    self.output_text.config(text=precipitationProbabilityMax[index])
+            else:
+                return 0
+        elif self.data_cat_dropdown.get() == "Mean":
+            if self.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (end_date - start_date + 1)
+                self.output_text.config(text=mean_temp)
+            elif self.data_dropdown.get() == "Temp High":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (end_date - start_date + 1)
+                self.output_text.config(text=mean_temp)
+            elif self.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                self.output_text.config(text=mean_temp)
+            elif self.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                self.output_text.config(text=mean_temp)
+            elif self.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                self.output_text.config(text=mean_temp)
+            else:
+                return 0
+        elif self.data_cat_dropdown.get() == "Max":
+            if self.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = max(float(temp) for temp in temperatureMin[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Temp High":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = max(float(temp) for temp in temperatureMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = max(float(temp) for temp in precipitationSum[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = max(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            else:
+                return 0
+        elif self.data_cat_dropdown.get() == "Min":
+            if self.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Temp High":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = min(float(temp) for temp in temperatureMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = min(float(temp) for temp in precipitationSum[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = min(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            elif self.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(self.start_date_dropdown.get())
+                end_date = dates.index(self.end_date_dropdown.get())
+                max_temp = min(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
+                self.output_text.config(text=max_temp)
+            else:
+                return 0
     def write_file(self, input):
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
         lines = input.split('\n')
