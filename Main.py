@@ -138,27 +138,42 @@ class App(ttk.Frame):
              'Thunderstorm, heavy, with hail (Hail, small hail, snow pellets) at time of observation'
              ]
 
+    # variables for setting the location
     latitude_set = 0
     longitude_set = 0
 
     def __init__(self, parent):
-        ttk.Frame.__init__(self)
+        ttk.Frame.__init__(self, parent)
+        """
+        Initialize the frame with given parent widget.
 
+        Args:
+            parent (tk.Widget): Parent widget to which this frame belongs.
+        """
         # Make the app responsive
         for index in [0, 1, 2]:
             self.columnconfigure(index=index, weight=1)
             self.rowconfigure(index=index, weight=1)
 
-        # Create value lists
-        self.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
-        self.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed', 'Precipitation Probability']
+        # Create lists of data types and categories
+        self.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
+                               'Precipitation Probability']
+        self.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
+                                        'Precipitation Probability']
         self.data_cat = ['Max', 'Min', 'Mean', 'Single']
 
-        # Create widgets
+        # Set up all widgets within the frame
         self.setup_widgets()
 
     def setup_widgets(self):
-        # Create a Frame for input upload button and close button
+        """
+        Set up all widgets within the frame.
+
+        This method initializes and places various widgets including buttons, dropdowns, labels,
+        and frames within the main frame of the application.
+
+        """
+        # Header frame for upload and close buttons
         self.header_frame = ttk.Frame(self, padding=(20, 10))
         self.header_frame.grid(row=0, column=0, sticky="EW")
 
@@ -170,38 +185,37 @@ class App(ttk.Frame):
         self.close_button = ttk.Button(self.header_frame, text="Close", command=self.quit)
         self.close_button.grid(row=0, column=1, padx=5, pady=5)
 
-        # Body frame
+        # Body frame for notebook
         self.body_frame = ttk.Frame(self)
-        self.body_frame.grid(
-            row=1, column=0, padx=10, pady=10, sticky="NSEW"
-        )
+        self.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
 
-        # Notebook
+        # Notebook widget for tabs
         self.notebook = ttk.Notebook(self.body_frame)
         self.notebook.pack(fill="both", expand=True)
 
-        # Tab #1
+        # Tab #1: Data Output
         self.tab_1 = ttk.Frame(self.notebook)
-        for index in [0, 1]:
-            self.tab_1.columnconfigure(index=index, weight=1)
-            self.tab_1.rowconfigure(index=index, weight=1)
         self.notebook.add(self.tab_1, text="Data Output")
 
-        # Date dropdown
+        # Statistics frame within Tab #1
         self.weather_code_frame = ttk.LabelFrame(self.tab_1, text="Statistics", padding=(20, 10))
-        self.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky = 'NSEW', columnspan = 4)
+        self.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
+        # Start Date Dropdown
         self.start_date_dropdown = ttk.Combobox(self.tab_1, state="readonly", values=dates)
-        self.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky = "W")
+        self.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
         self.start_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
 
+        # Data Type Dropdown
         self.data_dropdown = ttk.Combobox(self.tab_1, state="readonly", values=self.data_type_list_complete)
         self.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
         self.data_dropdown.bind("<<ComboboxSelected>>", self.data_test)
 
-        self.output_text = ttk.Label(self.weather_code_frame, text='', wraplength = 675)
+        # Output Text Label
+        self.output_text = ttk.Label(self.weather_code_frame, text='', wraplength=675)
         self.output_text.grid(row=0, column=0, padx=5, pady=5)
 
+        # Latitude and Longitude Entry Fields
         self.lat = ttk.Entry(self.tab_1, width=30)
         self.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
         self.lat.bind("<FocusOut>", self.lat_long_entry)
@@ -210,42 +224,51 @@ class App(ttk.Frame):
         self.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
         self.long.bind("<FocusOut>", self.lat_long_entry)
 
-        # Tab #2
+        # Tab #2: Histogram
         self.tab_2 = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_2, text="Histogram")
 
+        # Histogram frame within Tab #2
         self.histogram_frame = ttk.LabelFrame(self.tab_2, text="Histogram")
-        self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nwe")
+        self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
 
-        # Data type dropdown
+        # Histogram Data Type Dropdown
         self.histogram_data_type_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=self.data_type_list
         )
         self.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
         self.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
 
+        # Histogram Start Date Dropdown
         self.histogram_start_date_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=dates
         )
         self.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
         self.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+
+        # Histogram End Date Dropdown
         self.histogram_end_date_dropdown = ttk.Combobox(
             self.histogram_frame, state="readonly", values=dates
         )
         self.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
         self.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
 
+        # Canvas for Histogram
         self.canvas = None
-        # Tab #3
+
+        # Tab #3: Credits
         self.tab_3 = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_3, text="Credits")
 
+        # Credits frame within Tab #3
         self.credits = ttk.LabelFrame(self.tab_3, text="Credits", padding=(20, 10))
         self.credits.grid(row=0, column=0, padx=10, pady=10)
 
+        # Credits Text Box
         self.credits_textbox = tk.Text(self.credits, wrap='word', height=30, width=90)
-        self.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='nsew', rowspan=2, columnspan=2)
+        self.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
 
+        # Inserting Credits Information
         credits_text = (
             "This application uses the following open source libraries:\n"
             "- Tkinter - A Python binding to the Tk GUI toolkit.\n"
@@ -257,39 +280,84 @@ class App(ttk.Frame):
             "- pandas - A fast, powerful, flexible, and easy-to-use open source data analysis and data manipulation library built on top of the Python programming language.\n"
             "- retry_requests - A Python library to automatically retry failed HTTP requests using the requests library.\n"
             "- requests - A simple, yet elegant HTTP library.\n"
-            "- Azure-ttk-theme - A modern theme for the Tkinter/ttk widgets.")
-
+            "- Azure-ttk-theme - A modern theme for the Tkinter/ttk widgets."
+        )
         self.credits_textbox.insert('1.0', credits_text)
         self.credits_textbox.config(state='disabled')  # Make the text box read-only
+
         # Configure grid weight to allow the text box to expand
         self.credits.grid_rowconfigure(0, weight=1)
         self.credits.grid_columnconfigure(0, weight=1)
-    def lat_long_entry(self, event=None):
+
+    def lat_long_entry(self, event):
+        """
+        Process latitude and longitude values entered by the user.
+
+        This method retrieves latitude and longitude values from Entry widgets
+        and calls the evaluate method to process them.
+
+        Args:
+            event (tk.Event, optional): The event that triggered this method.
+        """
+        # Get the latitude and longitude values from the Entry widgets
         self.latitude_set = self.lat.get()
         self.longitude_set = self.long.get()
+
+        # Call the evaluate method to process the latitude and longitude values
         self.evaluate()
+
     def data_test(self, event):
+        """
+        Handle changes when a new data type is selected.
+
+        This method checks if the selected data type is "Weather Code". If it is,
+        it hides the data category dropdown and end date dropdown (if they exist).
+        Otherwise, it shows the data category dropdown and binds a handler to it.
+
+        Args:
+            event (tk.Event, optional): The event that triggered this method.
+        """
+        # Check if the selected data type is "Weather Code"
         if self.data_dropdown.get() == "Weather Code":
+            # Hide data category dropdown if it exists
             if hasattr(self, 'data_cat_dropdown'):
                 self.data_cat_dropdown.grid_remove()
+
+            # Hide end date dropdown if it exists
             if hasattr(self, 'end_date_dropdown'):
                 self.end_date_dropdown.grid_remove()
         else:
+            # If data type is not "Weather Code", show data category dropdown
             if not hasattr(self, 'data_cat_dropdown'):
                 self.data_cat_dropdown = ttk.Combobox(
                     self.tab_1, state="readonly", values=self.data_cat
                 )
                 self.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
-                self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.stupid)
+                self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.handle_data_category_selection)
             else:
                 self.data_cat_dropdown.grid()
+
+        # Call the evaluate method to process the changes
         self.evaluate()
 
-    def stupid(self, event=None):
+    def handle_data_category_selection(self, event=None):
+        """
+        Handle changes when a new data category is selected.
+
+        This method checks if the selected data category is 'Single'. If it is,
+        it hides the end date dropdown (if it exists). Otherwise, it shows the
+        end date dropdown and binds a handler to it.
+
+        Args:
+            event (tk.Event, optional): The event that triggered this method.
+        """
+        # Check if the selected data category is 'Single'
         if self.data_cat_dropdown.get() == 'Single':
+            # Hide end date dropdown if it exists
             if hasattr(self, 'end_date_dropdown'):
                 self.end_date_dropdown.grid_remove()
         else:
+            # Show end date dropdown if it does not exist
             if not hasattr(self, 'end_date_dropdown'):
                 self.end_date_dropdown = ttk.Combobox(
                     self.tab_1, state="readonly"
@@ -299,9 +367,25 @@ class App(ttk.Frame):
                 self.end_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
             else:
                 self.end_date_dropdown.grid()
+
+        # Call the evaluate method to process the changes
         self.evaluate()
 
     def evaluate(self):
+        """
+           Sets the output text based on user-selected data category and type.
+
+           - Weather Code: Displays input and real weather codes for a selected date.
+           - Single (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
+             Compares input and real data for a single date.
+           - Mean (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
+             Calculates and displays average input and real data over a date range.
+           - Max (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
+             Displays maximum input and real data over a date range.
+           - Min (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
+             Displays minimum input and real data over a date range.
+           """
+        # sets the output for when Weather Code is selected
         if self.data_dropdown.get() == "Weather Code":
             selected_date = self.start_date_dropdown.get()
             if selected_date in dates:
@@ -310,6 +394,8 @@ class App(ttk.Frame):
                 weather_code_real = self.openMeteoSetup(index, index, "Weather Code", self.latitude_set, self.longitude_set )
                 self.output_text.config(text = "Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code, self.codes[weather_code], int(weather_code_real), self.codes[int(weather_code_real)]))
                 self.output_text.config(font=("Arial", 20))
+
+        # sets the output for when single is selected
         elif self.data_cat_dropdown.get() == "Single":
             self.output_text.config(font=("Arial", 20))
             if self.data_dropdown.get() == "Temp Low":
@@ -342,6 +428,8 @@ class App(ttk.Frame):
                     index = dates.index(selected_date)
                     precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability", self.latitude_set, self.longitude_set   )
                     self.output_text.config(text = "Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(int(round(float(precipitationProbabilityMax[index]),0)), int(precip_chance)))
+
+        # sets the output for when Mean is selected
         elif self.data_cat_dropdown.get() == "Mean":
             self.output_text.config(font=("Arial", 20))
             if self.data_dropdown.get() == "Temp Low":
@@ -374,6 +462,8 @@ class App(ttk.Frame):
                 mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set)) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(mean_temp, mean_temp_real))
+
+        # sets the output for when Max is selected
         elif self.data_cat_dropdown.get() == "Max":
             self.output_text.config(font=("Arial", 20))
             if self.data_dropdown.get() == "Temp Low":
@@ -406,6 +496,8 @@ class App(ttk.Frame):
                 max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(max_temp, max_temp_real))
+
+        # sets the output for when Min is selected
         elif self.data_cat_dropdown.get() == "Min":
             self.output_text.config(font=("Arial", 20))
             if self.data_dropdown.get() == "Temp Low":
@@ -413,7 +505,7 @@ class App(ttk.Frame):
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Minimum Input Low Temperature: {:.0f} C\n\nminimum Real Low Temperature: {:.0f} C".format(min_temp, min_temp_real))
+                self.output_text.config(text="Minimum Input Low Temperature: {:.0f} C\n\nMinimum Real Low Temperature: {:.0f} C".format(min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
@@ -440,6 +532,27 @@ class App(ttk.Frame):
                 self.output_text.config(text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(min_temp, min_temp_real))
 
     def write_file(self, input):
+        """
+        Parse input data and assign values to global variables representing weather data.
+
+        Args:
+            input (str): Data input in the format of key-value pairs separated by ': ' and lines separated by '\n'.
+                         Keys include 'date', 'weather_code', 'temperature_max', 'temperature_min',
+                         'precipitation_sum', 'wind_speed_max', 'precipitation_probability_max'.
+
+        Sets global variables:
+            - dates: List of dates parsed from input.
+            - weatherCode: List of weather codes parsed from input.
+            - temperatureMax: List of maximum temperatures parsed from input.
+            - temperatureMin: List of minimum temperatures parsed from input.
+            - precipitationSum: List of precipitation amounts parsed from input.
+            - windSpeedMax: List of maximum wind speeds parsed from input.
+            - precipitationProbabilityMax: List of maximum precipitation probabilities parsed from input.
+
+        Updates combobox values:
+            - histogram_start_date_dropdown, histogram_end_date_dropdown, start_date_dropdown, end_date_dropdown:
+              Sets their values to the parsed 'dates' list.
+        """
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
         lines = input.split('\n')
         for line in lines:
@@ -461,7 +574,7 @@ class App(ttk.Frame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
-        #needs to be removed in the final edit
+        #will be removed in final edit
         print("Dates: ", dates)
         print("Weather Codes: ", weatherCode)
         print("Max Temperatures: ", temperatureMax)
@@ -477,6 +590,20 @@ class App(ttk.Frame):
 
     # Uploads file
     def upload_file(self):
+        """
+        Open a file dialog to select a file and read its contents.
+
+        The selected file's contents are read and passed to the 'write_file' method
+        for further processing.
+
+        If the file is not found or cannot be read, an error message is displayed.
+
+        This method is typically used to upload a file containing weather data.
+
+        Raises:
+            FileNotFoundError: If the selected file is not found or cannot be read.
+
+        """
         file_path = filedialog.askopenfilename()
         if file_path:
             try:
@@ -484,9 +611,22 @@ class App(ttk.Frame):
                     text = file.read()
                     self.write_file(text)
             except FileNotFoundError:
-                messagebox.showerror(title='Error', message='Womp Womp')
+                messagebox.showerror(title='Error', message='File Read Error')
 
     def plot_histogram(self, event):
+        """
+        Plot a histogram based on selected data type and date range.
+
+        Args:
+            event: Event object that triggered the method.
+
+        Retrieves data type, start date, and end date from dropdowns. Constructs a histogram
+        using matplotlib based on the selected data type and the corresponding data from
+        start date to end date.
+
+        Clears previous plot if it exists and updates the canvas with the new histogram.
+
+        """
         data_type = self.histogram_data_type_dropdown.get()
         start_date = self.histogram_start_date_dropdown.get()
         end_date = self.histogram_end_date_dropdown.get()
@@ -535,6 +675,25 @@ class App(ttk.Frame):
                 self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
     def openMeteoSetup(self, start_date, end_date, data_type_input, latitude, longitude):
+        """
+        Set up and retrieve weather data from Open-Meteo API.
+
+        Args:
+            start_date (int): Index of the start date in the `dates` list.
+            end_date (int): Index of the end date in the `dates` list.
+            data_type_input (str): Type of weather data to retrieve ('Temp Low', 'Temp High',
+                                   'Precipitation Amount', 'Precipitation Probability', 'Wind Speed',
+                                   'Weather Code').
+            latitude (float): Latitude coordinate for the weather location.
+            longitude (float): Longitude coordinate for the weather location.
+
+        Returns:
+            list or numpy.ndarray: Weather data based on the `data_type_input` parameter.
+
+        Sets up an Open-Meteo API client with caching and retries on error. Retrieves daily weather
+        data for the specified location and date range, converting it into a pandas DataFrame. Returns
+        the specific weather data type based on the `data_type_input`.
+        """
         start_date = dates[start_date]
         end_date = dates[end_date]
         # Setup the Open-Meteo API client with cache and retry on error
@@ -602,7 +761,6 @@ class App(ttk.Frame):
             return daily_wind_speed_10m_max
         elif(data_type_input == "Weather Code"):
             return daily_weather_code
-
 
 if __name__ == "__main__":
     # Initialize the main window
