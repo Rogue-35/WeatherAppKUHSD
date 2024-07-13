@@ -1,13 +1,14 @@
 # This project uses the following open source libraries:
 # - Tkinter (standard library)
-# - Matplotlib (version 3.4.3) - https://matplotlib.org/
+# - Matplotlib (version 3.9.1) - https://matplotlib.org/
 # - asyncio (standard library)
-# - OpenMeteo (version 0.1.0) - https://pypi.org/project/open-meteo/
-# - openmeteo_requests (version 0.1.0) - https://pypi.org/project/openmeteo-requests/
-# - requests_cache (version 0.8.1) - https://requests-cache.readthedocs.io/
-# - pandas (version 1.3.3) - https://pandas.pydata.org/
-# - retry_requests (version 1.0.0) - https://pypi.org/project/retry-requests/
-# - requests (version 2.26.0) - https://requests.readthedocs.io/
+# - OpenMeteo (version 0.3.1) - https://pypi.org/project/open-meteo/
+# - openmeteo_requests (version 1.2.0) - https://pypi.org/project/openmeteo-requests/
+# - requests_cache (version 1.2.1) - https://requests-cache.readthedocs.io/
+# - pandas (version 2.2.2) - https://pandas.pydata.org/
+# - retry_requests (version 2.0.0) - https://pypi.org/project/retry-requests/
+# - requests (version 2.32.3) - https://requests.readthedocs.io/
+# - Flask (version 3.0.3) - https://flask.palletsprojects.com/
 # - Azure-ttk-theme - https://github.com/rdbende/Azure-ttk-theme
 
 import tkinter as tk
@@ -22,6 +23,7 @@ import requests_cache
 import pandas as pd
 from retry_requests import retry
 import requests
+from flask import Flask, jsonify, request
 
 # weather data lists
 dates = []
@@ -31,10 +33,6 @@ temperatureMin = []
 precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
-
-# variables for visualization
-latitude_set = 0
-longitude_set = 0
 
 class App(ttk.Frame):
     # lookup table for weather code
@@ -140,6 +138,9 @@ class App(ttk.Frame):
              'Thunderstorm, heavy, with hail (Hail, small hail, snow pellets) at time of observation'
              ]
 
+    latitude_set = 0
+    longitude_set = 0
+
     def __init__(self, parent):
         ttk.Frame.__init__(self)
 
@@ -188,7 +189,7 @@ class App(ttk.Frame):
 
         # Date dropdown
         self.weather_code_frame = ttk.LabelFrame(self.tab_1, text="Statistics", padding=(20, 10))
-        self.weather_code_frame.grid(row=1, column=0, padx=10, pady=10, sticky = 'NSEW', columnspan = 4)
+        self.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky = 'NSEW', columnspan = 4)
 
         self.start_date_dropdown = ttk.Combobox(self.tab_1, state="readonly", values=dates)
         self.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky = "W")
@@ -200,6 +201,14 @@ class App(ttk.Frame):
 
         self.output_text = ttk.Label(self.weather_code_frame, text='', wraplength = 675)
         self.output_text.grid(row=0, column=0, padx=5, pady=5)
+
+        self.lat = ttk.Entry(self.tab_1, width=30)
+        self.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        self.lat.bind("<FocusOut>", self.lat_long_entry)
+
+        self.long = ttk.Entry(self.tab_1, width=30)
+        self.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        self.long.bind("<FocusOut>", self.lat_long_entry)
 
         # Tab #2
         self.tab_2 = ttk.Frame(self.notebook)
@@ -255,7 +264,10 @@ class App(ttk.Frame):
         # Configure grid weight to allow the text box to expand
         self.credits.grid_rowconfigure(0, weight=1)
         self.credits.grid_columnconfigure(0, weight=1)
-
+    def lat_long_entry(self, event=None):
+        self.latitude_set = self.lat.get()
+        self.longitude_set = self.long.get()
+        self.evaluate()
     def data_test(self, event):
         if self.data_dropdown.get() == "Weather Code":
             if hasattr(self, 'data_cat_dropdown'):
@@ -295,7 +307,7 @@ class App(ttk.Frame):
             if selected_date in dates:
                 index = dates.index(selected_date)
                 weather_code = int(float(weatherCode[index]))
-                weather_code_real = self.openMeteoSetup(index, index, "Weather Code" )
+                weather_code_real = self.openMeteoSetup(index, index, "Weather Code", self.latitude_set, self.longitude_set )
                 self.output_text.config(text = "Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code, self.codes[weather_code], int(weather_code_real), self.codes[int(weather_code_real)]))
                 self.output_text.config(font=("Arial", 20))
         elif self.data_cat_dropdown.get() == "Single":
@@ -304,31 +316,31 @@ class App(ttk.Frame):
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    low_temp = self.openMeteoSetup(index, index, "Temp Low" )
+                    low_temp = self.openMeteoSetup(index, index, "Temp Low", self.latitude_set, self.longitude_set  )
                     self.output_text.config(text = "Input Low Temperature: {}C\n\nReal Low Temperature: {}C".format(int(round(float(temperatureMin[index]), 0)), int(low_temp)))
             elif self.data_dropdown.get() == "Temp High":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    high_temp = self.openMeteoSetup(index, index, "Temp High" )
+                    high_temp = self.openMeteoSetup(index, index, "Temp High", self.latitude_set, self.longitude_set  )
                     self.output_text.config(text = "Input High Temperature: {}C\n\nReal High Temperature: {}C".format(int(round(float(temperatureMax[index]),0)), int(high_temp)))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_sum = self.openMeteoSetup(index, index, "Precipitation Amount" )
+                    precip_sum = self.openMeteoSetup(index, index, "Precipitation Amount", self.latitude_set, self.longitude_set  )
                     self.output_text.config(text = "Input Precipitation Amount: {} inches\n\nReal Precipitation Amount: {} inches".format(int(round(float(precipitationSum[index]),0)), int(precip_sum)))
             elif self.data_dropdown.get() == "Wind Speed":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    wind_speed = self.openMeteoSetup(index, index, "Wind Speed" )
+                    wind_speed = self.openMeteoSetup(index, index, "Wind Speed", self.latitude_set, self.longitude_set  )
                     self.output_text.config(text = "Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(int(round(float(windSpeedMax[index]), 0)), int(wind_speed)))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability" )
+                    precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability", self.latitude_set, self.longitude_set   )
                     self.output_text.config(text = "Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(int(round(float(precipitationProbabilityMax[index]),0)), int(precip_chance)))
         elif self.data_cat_dropdown.get() == "Mean":
             self.output_text.config(font=("Arial", 20))
@@ -336,31 +348,31 @@ class App(ttk.Frame):
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low" )) / (end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input Low Temperature: {:.0f} C\n\nAverage Real Low Temperature: {:.0f} C".format(mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High" )) / (end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input High Temperature: {:.0f} C\n\nAverage Real High Temperature: {:.0f} C".format(mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount" )) / (end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input Precipitation Amount: {:.0f} inches\n\nAverage Real Precipitation Amount: {:.0f} inches".format(mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed" )) / (end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input Max Wind Speed: {:.0f} mph\n\nAverage Real Max Wind Speed: {:.0f} mph".format(mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability" )) / (end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set)) / (end_date - start_date + 1)
                 self.output_text.config(text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(mean_temp, mean_temp_real))
         elif self.data_cat_dropdown.get() == "Max":
             self.output_text.config(font=("Arial", 20))
@@ -368,31 +380,31 @@ class App(ttk.Frame):
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low" ))
+                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input Low Temperature: {:.0f} C\n\nMaximum Real Low Temperature: {:.0f} C".format(max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High" ))
+                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input High Temperature: {:.0f} C\n\nMaximum Real High Temperature: {:.0f} C".format(max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount" ))
+                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input Precipitation Amount: {:.0f} inches\n\nMaximum Real Precipitation Amount: {:.0f} inches".format(max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed" ))
+                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed",  self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input Wind Speed: {:.0f} mph\n\nMaximum Real Wind Speed: {:.0f} mph".format(max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability" ))
+                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(max_temp, max_temp_real))
         elif self.data_cat_dropdown.get() == "Min":
             self.output_text.config(font=("Arial", 20))
@@ -400,31 +412,31 @@ class App(ttk.Frame):
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low" ))
+                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Minimum Input Low Temperature: {:.0f} C\n\nminimum Real Low Temperature: {:.0f} C".format(min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High" ))
+                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Minimum Input High Temperature: {:.0f} C\n\nMinimum Real High Temperature: {:.0f} C".format(min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount"))
+                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount",self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Minimum Input Precipitation Amount: {:.0f} inches\n\nMinimum Real Precipitation Amount: {:.0f} inches".format(min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed" ))
+                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set, self.longitude_set))
                 self.output_text.config(text="Minimum Input Max Wind Speed: {:.0f} mph\n\nMinimum Real Max Wind Speed: {:.0f} mph".format(min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability" ))
+                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set ))
                 self.output_text.config(text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(min_temp, min_temp_real))
 
     def write_file(self, input):
@@ -463,7 +475,6 @@ class App(ttk.Frame):
         self.start_date_dropdown['values'] = dates
         self.end_date_dropdown['values'] = dates
 
-
     # Uploads file
     def upload_file(self):
         file_path = filedialog.askopenfilename()
@@ -472,7 +483,6 @@ class App(ttk.Frame):
                 with open(file_path, 'r') as file:
                     text = file.read()
                     self.write_file(text)
-                    # messagebox.showinfo(title='File Uploaded', message='File successfully uploaded and parsed.')
             except FileNotFoundError:
                 messagebox.showerror(title='Error', message='Womp Womp')
 
@@ -524,7 +534,7 @@ class App(ttk.Frame):
                 self.canvas.draw()
                 self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
-    def openMeteoSetup(self, start_date, end_date, data_type_input):
+    def openMeteoSetup(self, start_date, end_date, data_type_input, latitude, longitude):
         start_date = dates[start_date]
         end_date = dates[end_date]
         # Setup the Open-Meteo API client with cache and retry on error
@@ -536,8 +546,8 @@ class App(ttk.Frame):
         # The order of variables in hourly or daily is important to assign them correctly below
         url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
         params = {
-            "latitude": 38.982138,
-            "longitude": -94.864437,
+            "latitude": latitude,
+            "longitude": longitude,
             "start_date": start_date,
             "end_date": end_date,
             "daily": ["weather_code", "temperature_2m_max", "temperature_2m_min", "precipitation_sum",
