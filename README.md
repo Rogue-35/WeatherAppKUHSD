@@ -1,19 +1,26 @@
-## Acknowledgements
+## Acknowledgments
 
-This project uses the following open source libraries:
+This project makes use of several open-source libraries and resources:
 
-- [Tkinter](https://docs.python.org/3/library/tkinter.html) (standard library) - A Python binding to the Tk GUI toolkit.
-- [Matplotlib](https://matplotlib.org/) (version 3.4.3) - A comprehensive library for creating static, animated, and interactive visualizations in Python.
-- [asyncio](https://docs.python.org/3/library/asyncio.html) (standard library) - Asynchronous I/O, event loop, coroutines, and tasks.
-- [OpenMeteo](https://pypi.org/project/open-meteo/) (version 0.1.0) - A Python client for the Open-Meteo weather API.
-- [openmeteo_requests](https://pypi.org/project/openmeteo-requests/) (version 0.1.0) - A Python client for the Open-Meteo weather API using requests.
-- [requests_cache](https://requests-cache.readthedocs.io/) (version 0.8.1) - A transparent persistent cache for the requests library.
-- [pandas](https://pandas.pydata.org/) (version 1.3.3) - A fast, powerful, flexible, and easy-to-use open source data analysis and data manipulation library built on top of the Python programming language.
-- [retry_requests](https://pypi.org/project/retry-requests/) (version 1.0.0) - A Python library to automatically retry failed HTTP requests using the requests library.
-- [requests](https://requests.readthedocs.io/) (version 2.26.0) - A simple, yet elegant HTTP library.
-- [Azure-ttk-theme](https://github.com/rdbende/Azure-ttk-theme) - A modern theme for the Tkinter/ttk widgets.
+- **Tkinter** - Python binding to the Tk GUI toolkit.
+- **Matplotlib** - A comprehensive library for creating static, animated, and interactive visualizations in Python.
+  - Version 3.9.1 - [Matplotlib](https://matplotlib.org/)
+- **asyncio** - Asynchronous I/O, event loop, coroutines, and tasks.
+- **OpenMeteo** - A Python client for the Open-Meteo weather API.
+  - Version 0.3.1 - [OpenMeteo](https://pypi.org/project/open-meteo/)
+- **openmeteo_requests** - A Python client for the Open-Meteo weather API using requests.
+  - Version 1.2.0 - [openmeteo_requests](https://pypi.org/project/openmeteo-requests/)
+- **requests_cache** - A transparent persistent cache for the requests library.
+  - Version 1.2.1 - [requests_cache](https://requests-cache.readthedocs.io/)
+- **pandas** - A fast, powerful, flexible, and easy-to-use open-source data analysis and data manipulation library.
+  - Version 2.2.2 - [pandas](https://pandas.pydata.org/)
+- **retry_requests** - A Python library to automatically retry failed HTTP requests using the requests library.
+  - Version 2.0.0 - [retry_requests](https://pypi.org/project/retry-requests/)
+- **requests** - A simple, yet elegant HTTP library.
+  - Version 2.32.3 - [requests](https://requests.readthedocs.io/)
+- **Flask** - A lightweight WSGI web application framework in Python.
+  - Version 3.0.3 - [Flask](https://flask.palletsprojects.com/)
+- **Azure-ttk-theme** - A modern theme for the Tkinter/ttk widgets.
+  - [Azure-ttk-theme](https://github.com/rdbende/Azure-ttk-theme)
 
-### Credits
-
-We would like to thank the developers of these open source projects for their contributions.
-
+We are grateful to the developers and contributors of these open-source projects for their invaluable work.
