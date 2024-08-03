@@ -3,9 +3,10 @@
 This project makes use of several open-source libraries and resources:
 
 - **Tkinter** - Python binding to the Tk GUI toolkit.
+- **threading** - High-level threading interface.
+- **asyncio** - Asynchronous I/O, event loop, coroutines, and tasks.
 - **Matplotlib** - A comprehensive library for creating static, animated, and interactive visualizations in Python.
   - Version 3.9.1 - [Matplotlib](https://matplotlib.org/)
-- **asyncio** - Asynchronous I/O, event loop, coroutines, and tasks.
 - **OpenMeteo** - A Python client for the Open-Meteo weather API.
   - Version 0.3.1 - [OpenMeteo](https://pypi.org/project/open-meteo/)
 - **openmeteo_requests** - A Python client for the Open-Meteo weather API using requests.
