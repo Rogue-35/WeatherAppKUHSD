@@ -1,7 +1,8 @@
 # This project uses the following open source libraries:
 # - Tkinter (standard library)
-# - Matplotlib (version 3.9.1) - https://matplotlib.org/
+# - threading (standard library)
 # - asyncio (standard library)
+# - Matplotlib (version 3.9.1) - https://matplotlib.org/
 # - OpenMeteo (version 0.3.1) - https://pypi.org/project/open-meteo/
 # - openmeteo_requests (version 1.2.0) - https://pypi.org/project/openmeteo-requests/
 # - requests_cache (version 1.2.1) - https://requests-cache.readthedocs.io/
@@ -24,8 +25,12 @@ import pandas as pd
 from retry_requests import retry
 import requests
 from flask import Flask, jsonify, request
+import threading
 
-# weather data lists
+# Initialize Flask app
+flask_app = Flask(__name__)
+
+# Global variables to store weather data
 dates = []
 weatherCode = []
 temperatureMax = []
@@ -171,7 +176,6 @@ class App(ttk.Frame):
 
         This method initializes and places various widgets including buttons, dropdowns, labels,
         and frames within the main frame of the application.
-
         """
         # Header frame for upload and close buttons
         self.header_frame = ttk.Frame(self, padding=(20, 10))
@@ -300,8 +304,8 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Get the latitude and longitude values from the Entry widgets
-        self.latitude_set = self.lat.get()
-        self.longitude_set = self.long.get()
+        self.latitude_set = float(self.lat.get())
+        self.longitude_set = float(self.long.get())
 
         # Call the evaluate method to process the latitude and longitude values
         self.evaluate()
@@ -762,12 +766,247 @@ class App(ttk.Frame):
         elif(data_type_input == "Weather Code"):
             return daily_weather_code
 
+
+    def write_file(self, input):
+        global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
+        lines = input.split('\n')
+        for line in lines:
+            parts = line.split(': ')
+            key = parts[0]
+            values = parts[1].split()
+            if key == 'date':
+                dates = values
+            elif key == 'weather_code':
+                weatherCode = values
+            elif key == 'temperature_max':
+                temperatureMax = values
+            elif key == 'temperature_min':
+                temperatureMin = values
+            elif key == 'precipitation_sum':
+                precipitationSum = values
+            elif key == 'wind_speed_max':
+                windSpeedMax = values
+            elif key == 'precipitation_probability_max':
+                precipitationProbabilityMax = values
+
+        self.histogram_start_date_dropdown['values'] = dates
+        self.histogram_end_date_dropdown['values'] = dates
+        self.start_date_dropdown['values'] = dates
+        self.end_date_dropdown['values'] = dates
+
+# REST API routes
+@flask_app.route('/weather', methods=['GET'])
+def get_weather():
+   """
+   Get weather data for a specified date range and data type.
+
+   This method retrieves weather data based on the provided start date, end date,
+   and data type. If any of the required parameters are missing or the date range
+   is invalid, it returns an error message.
+
+   Args:
+       None
+
+   Returns:
+       json: Weather data for the specified date range and data type, or an error message.
+   """
+   # Retrieve query parameters from the request
+   start_date = request.args.get('start_date')
+   end_date = request.args.get('end_date')
+   data_type = request.args.get('data_type')
+
+   # Check if any required parameters are missing
+   if not start_date or not end_date or not data_type:
+       return jsonify({"error": "Missing required parameters"}), 400
+
+   # Validate the date range
+   try:
+       start_index = dates.index(start_date)
+       end_index = dates.index(end_date) + 1
+   except ValueError:
+       return jsonify({"error": "Invalid date range"}), 400
+
+   # Map the data type to the corresponding data list
+   data = {
+       'Weather Code': weatherCode,
+       'Temp Low': temperatureMin,
+       'Temp High': temperatureMax,
+       'Precipitation Amount': precipitationSum,
+       'Wind Speed': windSpeedMax,
+       'Precipitation Probability': precipitationProbabilityMax
+   }.get(data_type)
+
+   # Check if the data type is valid
+   if not data:
+       return jsonify({"error": "Invalid data type"}), 400
+
+   # Generate the result dictionary for the specified date range
+   result = {dates[i]: data[i] for i in range(start_index, end_index)}
+   return jsonify(result)
+
+
+@flask_app.route('/weather', methods=['POST'])
+def add_weather():
+   """
+   Add new weather data.
+
+   This method adds new weather data to the existing lists. The new data must
+   include a date, and the date must not already exist in the data. If the
+   data format is invalid or the date already exists, it returns an error message.
+
+   Args:
+       None
+
+   Returns:
+       json: Success message or an error message.
+   """
+   # Retrieve the new data from the request body
+   new_data = request.json
+   if not new_data or 'date' not in new_data:
+       return jsonify({"error": "Invalid data format"}), 400
+
+   # Extract the date from the new data
+   date = new_data['date']
+   # Check if the date already exists
+   if date in dates:
+       return jsonify({"error": "Date already exists"}), 400
+
+   # Append the new data to the corresponding lists
+   dates.append(date)
+   weatherCode.append(str(new_data.get('weather_code', '')))
+   temperatureMax.append(str(new_data.get('temperature_max', '')))
+   temperatureMin.append(str(new_data.get('temperature_min', '')))
+   precipitationSum.append(str(new_data.get('precipitation_sum', '')))
+   windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
+   precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
+
+   return jsonify({"message": "Data added successfully"}), 201
+
+
+@flask_app.route('/weather', methods=['PUT'])
+def update_weather():
+   """
+   Update existing weather data.
+
+   This method updates a specific data point for a given date. The request must
+   include the date, data point, and the new value. If the data format is invalid
+   or the date is not found, it returns an error message.
+
+   Args:
+       None
+
+   Returns:
+       json: Success message or an error message.
+   """
+   # Retrieve the update information from the request body
+   update_info = request.json
+   if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
+       return jsonify({"error": "Invalid update format"}), 400
+
+   # Extract the date, data point, and value from the update information
+   date = update_info['date']
+   data_point = update_info['data_point']
+   value = update_info['value']
+
+   # Check if the date exists
+   if date not in dates:
+       return jsonify({"error": "Date not found"}), 404
+
+   # Get the index of the date
+   index = dates.index(date)
+   # Update the corresponding data point
+   if data_point == 'Weather Code':
+       weatherCode[index] = str(value)
+   elif data_point == 'Temp Low':
+       temperatureMin[index] = str(value)
+   elif data_point == 'Temp High':
+       temperatureMax[index] = str(value)
+   elif data_point == 'Precipitation Amount':
+       precipitationSum[index] = str(value)
+   elif data_point == 'Wind Speed':
+       windSpeedMax[index] = str(value)
+   elif data_point == 'Precipitation Probability':
+       precipitationProbabilityMax[index] = str(value)
+   else:
+       return jsonify({"error": "Invalid data point"}), 400
+
+   return jsonify({"message": "Data updated successfully"})
+
+
+@flask_app.route('/weather', methods=['DELETE'])
+def delete_weather():
+   """
+   Delete weather data for a specific date.
+
+   This method deletes weather data for a given date. The date must be provided
+   as a query parameter. If the date is not found, it returns an error message.
+
+   Args:
+       None
+
+   Returns:
+       json: Success message or an error message.
+   """
+   # Retrieve the date from the query parameters
+   date = request.args.get('date')
+   if not date:
+       return jsonify({"error": "Date parameter is required"}), 400
+
+   # Check if the date exists
+   if date not in dates:
+       return jsonify({"error": "Date not found"}), 404
+
+   # Get the index of the date
+   index = dates.index(date)
+   # Remove the data for the specified date
+   dates.pop(index)
+   weatherCode.pop(index)
+   temperatureMax.pop(index)
+   temperatureMin.pop(index)
+   precipitationSum.pop(index)
+   windSpeedMax.pop(index)
+   precipitationProbabilityMax.pop(index)
+
+   return jsonify({"message": "Data deleted successfully"})
+
+
+@flask_app.route('/')
+def home():
+   """
+   Home route.
+
+   This method returns a simple message for the home route of the Flask app.
+
+   Args:
+       None
+
+   Returns:
+       str: A message indicating the landing page for the weather app.
+   """
+   return "this is the local host landing page for the weather app"
+
+
+def run_flask():
+   """
+   Run the Flask app.
+
+   This method starts the Flask application with debugging enabled and without
+   the reloader.
+
+   Args:
+       None
+
+   Returns:
+       None
+   """
+   flask_app.run(debug=True, use_reloader=False)
+
 if __name__ == "__main__":
     # Initialize the main window
     root = tk.Tk()
     root.title("Weather App")
 
-    # Set the theme (do not change theme)
+    # Set the theme
     root.tk.call("source", "azure.tcl")
     root.tk.call("set_theme", "dark")
 
@@ -787,6 +1026,10 @@ if __name__ == "__main__":
     x_cordinate = (screen_width // 2) - (window_width // 2)
     y_cordinate = (screen_height // 2) - (window_height // 2) - 20
     root.geometry(f"{window_width}x{window_height}+{x_cordinate}+{y_cordinate}")
+
+    # Start the Flask app in a separate thread
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.start()
 
     # Start the Tkinter main loop
     root.mainloop()
