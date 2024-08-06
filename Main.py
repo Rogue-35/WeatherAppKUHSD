@@ -148,13 +148,13 @@ class App(ttk.Frame):
     longitude_set = 0
 
     def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
         """
         Initialize the frame with given parent widget.
 
         Args:
             parent (tk.Widget): Parent widget to which this frame belongs.
         """
+        ttk.Frame.__init__(self, parent)
         # Make the app responsive
         for index in [0, 1, 2]:
             self.columnconfigure(index=index, weight=1)
