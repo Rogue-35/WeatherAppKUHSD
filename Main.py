@@ -591,7 +591,9 @@ class App(ttk.Frame):
         self.histogram_end_date_dropdown['values'] = dates
         self.start_date_dropdown['values'] = dates
         self.end_date_dropdown['values'] = dates
-
+    def update_api(self):
+        self.start_date_dropdown['values'] = dates
+        self.end_date_dropdown['values'] = dates
     # Uploads file
     def upload_file(self):
         """
@@ -844,8 +846,6 @@ def get_weather():
    result = {dates[i]: data[i] for i in range(start_index, end_index)}
    return jsonify(result)
 
-
-
 @flask_app.route('/weather', methods=['POST'])
 def add_weather():
    """
@@ -881,6 +881,7 @@ def add_weather():
    windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
    precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
 
+   app.update_api()
    return jsonify({"message": "Data added successfully"}), 201
 
 
@@ -931,9 +932,9 @@ def update_weather():
    else:
        return jsonify({"error": "Invalid data point"}), 400
 
+   app.update_api()
    return jsonify({"message": "Data updated successfully"})
-   self.end_date_dropdown['values'] = dates
-   self.start_date_dropdown['values'] = dates
+
 
 @flask_app.route('/weather', methods=['DELETE'])
 def delete_weather():
@@ -969,9 +970,9 @@ def delete_weather():
    windSpeedMax.pop(index)
    precipitationProbabilityMax.pop(index)
 
+   app.update_api()
    return jsonify({"message": "Data deleted successfully"})
-   self.end_date_dropdown['values'] = dates
-   self.start_date_dropdown['values'] = dates
+
 
 @flask_app.route('/')
 def home():
