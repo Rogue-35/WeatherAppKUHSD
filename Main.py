@@ -39,6 +39,7 @@ precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
 
+
 class App(ttk.Frame):
     # lookup table for weather code
     codes = ['Cloud development not observed or not observable during the past hour',
@@ -395,8 +396,14 @@ class App(ttk.Frame):
             if selected_date in dates:
                 index = dates.index(selected_date)
                 weather_code = int(float(weatherCode[index]))
-                weather_code_real = self.openMeteoSetup(index, index, "Weather Code", self.latitude_set, self.longitude_set )
-                self.output_text.config(text = "Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code, self.codes[weather_code], int(weather_code_real), self.codes[int(weather_code_real)]))
+                weather_code_real = self.openMeteoSetup(index, index, "Weather Code", self.latitude_set,
+                                                        self.longitude_set)
+                self.output_text.config(
+                    text="Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code,
+                                                                                            self.codes[weather_code],
+                                                                                            int(weather_code_real),
+                                                                                            self.codes[
+                                                                                                int(weather_code_real)]))
                 self.output_text.config(font=("Arial", 20))
 
         # sets the output for when single is selected
@@ -406,32 +413,41 @@ class App(ttk.Frame):
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    low_temp = self.openMeteoSetup(index, index, "Temp Low", self.latitude_set, self.longitude_set  )
-                    self.output_text.config(text = "Input Low Temperature: {}C\n\nReal Low Temperature: {}F".format(int(round(float(temperatureMin[index]), 0)), int(low_temp)))
+                    low_temp = self.openMeteoSetup(index, index, "Temp Low", self.latitude_set, self.longitude_set)
+                    self.output_text.config(text="Input Low Temperature: {}C\n\nReal Low Temperature: {}F".format(
+                        int(round(float(temperatureMin[index]), 0)), int(low_temp)))
             elif self.data_dropdown.get() == "Temp High":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    high_temp = self.openMeteoSetup(index, index, "Temp High", self.latitude_set, self.longitude_set  )
-                    self.output_text.config(text = "Input High Temperature: {}C\n\nReal High Temperature: {}F".format(int(round(float(temperatureMax[index]),0)), int(high_temp)))
+                    high_temp = self.openMeteoSetup(index, index, "Temp High", self.latitude_set, self.longitude_set)
+                    self.output_text.config(text="Input High Temperature: {}C\n\nReal High Temperature: {}F".format(
+                        int(round(float(temperatureMax[index]), 0)), int(high_temp)))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_sum = self.openMeteoSetup(index, index, "Precipitation Amount", self.latitude_set, self.longitude_set  )
-                    self.output_text.config(text = "Input Precipitation Amount: {} inches\n\nReal Precipitation Amount: {} inches".format(int(round(float(precipitationSum[index]),0)), int(precip_sum)))
+                    precip_sum = self.openMeteoSetup(index, index, "Precipitation Amount", self.latitude_set,
+                                                     self.longitude_set)
+                    self.output_text.config(
+                        text="Input Precipitation Amount: {} inches\n\nReal Precipitation Amount: {} inches".format(
+                            int(round(float(precipitationSum[index]), 0)), int(precip_sum)))
             elif self.data_dropdown.get() == "Wind Speed":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    wind_speed = self.openMeteoSetup(index, index, "Wind Speed", self.latitude_set, self.longitude_set  )
-                    self.output_text.config(text = "Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(int(round(float(windSpeedMax[index]), 0)), int(wind_speed)))
+                    wind_speed = self.openMeteoSetup(index, index, "Wind Speed", self.latitude_set, self.longitude_set)
+                    self.output_text.config(text="Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(
+                        int(round(float(windSpeedMax[index]), 0)), int(wind_speed)))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 selected_date = self.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability", self.latitude_set, self.longitude_set   )
-                    self.output_text.config(text = "Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(int(round(float(precipitationProbabilityMax[index]),0)), int(precip_chance)))
+                    precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability", self.latitude_set,
+                                                        self.longitude_set)
+                    self.output_text.config(
+                        text="Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(
+                            int(round(float(precipitationProbabilityMax[index]), 0)), int(precip_chance)))
 
         # sets the output for when Mean is selected
         elif self.data_cat_dropdown.get() == "Mean":
@@ -439,33 +455,60 @@ class App(ttk.Frame):
             if self.data_dropdown.get() == "Temp Low":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
-                self.output_text.config(text="Average Input Low Temperature: {:.0f} C\n\nAverage Real Low Temperature: {:.0f} F".format(mean_temp, mean_temp_real))
+                mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in
+                                     self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
+                                                         self.longitude_set)) / (end_date - start_date + 1)
+                self.output_text.config(
+                    text="Average Input Low Temperature: {:.0f} C\n\nAverage Real Low Temperature: {:.0f} F".format(
+                        mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
-                self.output_text.config(text="Average Input High Temperature: {:.0f} C\n\nAverage Real High Temperature: {:.0f} F".format(mean_temp, mean_temp_real))
+                mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in
+                                     self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
+                                                         self.longitude_set)) / (end_date - start_date + 1)
+                self.output_text.config(
+                    text="Average Input High Temperature: {:.0f} C\n\nAverage Real High Temperature: {:.0f} F".format(
+                        mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
-                self.output_text.config(text="Average Input Precipitation Amount: {:.0f} inches\n\nAverage Real Precipitation Amount: {:.0f} inches".format(mean_temp, mean_temp_real))
+                mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in
+                                     self.openMeteoSetup(start_date, end_date, "Precipitation Amount",
+                                                         self.latitude_set, self.longitude_set)) / (
+                                             end_date - start_date + 1)
+                self.output_text.config(
+                    text="Average Input Precipitation Amount: {:.0f} inches\n\nAverage Real Precipitation Amount: {:.0f} inches".format(
+                        mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set, self.longitude_set )) / (end_date - start_date + 1)
-                self.output_text.config(text="Average Input Max Wind Speed: {:.0f} mph\n\nAverage Real Max Wind Speed: {:.0f} mph".format(mean_temp, mean_temp_real))
+                mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in
+                                     self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
+                                                         self.longitude_set)) / (end_date - start_date + 1)
+                self.output_text.config(
+                    text="Average Input Max Wind Speed: {:.0f} mph\n\nAverage Real Max Wind Speed: {:.0f} mph".format(
+                        mean_temp, mean_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set)) / (end_date - start_date + 1)
-                self.output_text.config(text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(mean_temp, mean_temp_real))
+                mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (
+                            end_date - start_date + 1)
+                mean_temp_real = sum(float(temp) for temp in
+                                     self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                         self.latitude_set, self.longitude_set)) / (
+                                             end_date - start_date + 1)
+                self.output_text.config(
+                    text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(
+                        mean_temp, mean_temp_real))
 
         # sets the output for when Max is selected
         elif self.data_cat_dropdown.get() == "Max":
@@ -474,32 +517,52 @@ class App(ttk.Frame):
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Maximum Input Low Temperature: {:.0f} C\n\nMaximum Real Low Temperature: {:.0f} F".format(max_temp, max_temp_real))
+                max_temp_real = max(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Maximum Input Low Temperature: {:.0f} C\n\nMaximum Real Low Temperature: {:.0f} F".format(
+                        max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Maximum Input High Temperature: {:.0f} C\n\nMaximum Real High Temperature: {:.0f} F".format(max_temp, max_temp_real))
+                max_temp_real = max(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Maximum Input High Temperature: {:.0f} C\n\nMaximum Real High Temperature: {:.0f} F".format(
+                        max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Maximum Input Precipitation Amount: {:.0f} inches\n\nMaximum Real Precipitation Amount: {:.0f} inches".format(max_temp, max_temp_real))
+                max_temp_real = max(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Maximum Input Precipitation Amount: {:.0f} inches\n\nMaximum Real Precipitation Amount: {:.0f} inches".format(
+                        max_temp, max_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed",  self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Maximum Input Wind Speed: {:.0f} mph\n\nMaximum Real Wind Speed: {:.0f} mph".format(max_temp, max_temp_real))
+                max_temp_real = max(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Maximum Input Wind Speed: {:.0f} mph\n\nMaximum Real Wind Speed: {:.0f} mph".format(max_temp,
+                                                                                                              max_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(max_temp, max_temp_real))
+                max_temp_real = max(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                        self.latitude_set, self.longitude_set))
+                self.output_text.config(
+                    text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(
+                        max_temp, max_temp_real))
 
         # sets the output for when Min is selected
         elif self.data_cat_dropdown.get() == "Min":
@@ -508,32 +571,52 @@ class App(ttk.Frame):
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Minimum Input Low Temperature: {:.0f} C\n\nMinimum Real Low Temperature: {:.0f} F".format(min_temp, min_temp_real))
+                min_temp_real = min(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Minimum Input Low Temperature: {:.0f} C\n\nMinimum Real Low Temperature: {:.0f} F".format(
+                        min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Temp High":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Minimum Input High Temperature: {:.0f} C\n\nMinimum Real High Temperature: {:.0f} F".format(min_temp, min_temp_real))
+                min_temp_real = min(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Minimum Input High Temperature: {:.0f} C\n\nMinimum Real High Temperature: {:.0f} F".format(
+                        min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Precipitation Amount":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Amount",self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Minimum Input Precipitation Amount: {:.0f} inches\n\nMinimum Real Precipitation Amount: {:.0f} inches".format(min_temp, min_temp_real))
+                min_temp_real = min(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Minimum Input Precipitation Amount: {:.0f} inches\n\nMinimum Real Precipitation Amount: {:.0f} inches".format(
+                        min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Wind Speed":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set, self.longitude_set))
-                self.output_text.config(text="Minimum Input Max Wind Speed: {:.0f} mph\n\nMinimum Real Max Wind Speed: {:.0f} mph".format(min_temp, min_temp_real))
+                min_temp_real = min(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
+                                                        self.longitude_set))
+                self.output_text.config(
+                    text="Minimum Input Max Wind Speed: {:.0f} mph\n\nMinimum Real Max Wind Speed: {:.0f} mph".format(
+                        min_temp, min_temp_real))
             elif self.data_dropdown.get() == "Precipitation Probability":
                 start_date = dates.index(self.start_date_dropdown.get())
                 end_date = dates.index(self.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in self.openMeteoSetup(start_date, end_date, "Precipitation Probability", self.latitude_set, self.longitude_set ))
-                self.output_text.config(text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(min_temp, min_temp_real))
+                min_temp_real = min(float(temp) for temp in
+                                    self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                        self.latitude_set, self.longitude_set))
+                self.output_text.config(
+                    text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(
+                        min_temp, min_temp_real))
 
     def write_file(self, input):
         """
@@ -578,7 +661,7 @@ class App(ttk.Frame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
-        #will be removed in final edit
+        # will be removed in final edit
         print("Dates: ", dates)
         print("Weather Codes: ", weatherCode)
         print("Max Temperatures: ", temperatureMax)
@@ -591,9 +674,17 @@ class App(ttk.Frame):
         self.histogram_end_date_dropdown['values'] = dates
         self.start_date_dropdown['values'] = dates
         self.end_date_dropdown['values'] = dates
+
     def update_api(self):
+        """
+            Updates the date dropdowns when the REST API is used
+
+            Args: None
+
+        """
         self.start_date_dropdown['values'] = dates
         self.end_date_dropdown['values'] = dates
+
     # Uploads file
     def upload_file(self):
         """
@@ -755,19 +846,18 @@ class App(ttk.Frame):
         }
 
         daily_dataframe = pd.DataFrame(data=daily_data)
-        if(data_type_input == "Temp Low"):
+        if (data_type_input == "Temp Low"):
             return daily_temperature_2m_min
-        elif(data_type_input == "Temp High"):
+        elif (data_type_input == "Temp High"):
             return daily_temperature_2m_max
-        elif(data_type_input == "Precipitation Amount"):
+        elif (data_type_input == "Precipitation Amount"):
             return daily_precipitation_sum
-        elif(data_type_input == "Precipitation Probability"):
+        elif (data_type_input == "Precipitation Probability"):
             return daily_precipitation_probability_max
-        elif(data_type_input == "Wind Speed"):
+        elif (data_type_input == "Wind Speed"):
             return daily_wind_speed_10m_max
-        elif(data_type_input == "Weather Code"):
+        elif (data_type_input == "Weather Code"):
             return daily_weather_code
-
 
     def write_file(self, input):
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
@@ -796,214 +886,217 @@ class App(ttk.Frame):
         self.start_date_dropdown['values'] = dates
         self.end_date_dropdown['values'] = dates
 
+
 # REST API routes
 @flask_app.route('/weather', methods=['GET'])
 def get_weather():
-   """
-   Get weather data for a specified date range and data type.
+    """
+    Get weather data for a specified date range and data type.
 
-   This method retrieves weather data based on the provided start date, end date,
-   and data type. If any of the required parameters are missing or the date range
-   is invalid, it returns an error message.
+    This method retrieves weather data based on the provided start date, end date,
+    and data type. If any of the required parameters are missing or the date range
+    is invalid, it returns an error message.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       json: Weather data for the specified date range and data type, or an error message.
-   """
-   # Retrieve query parameters from the request
-   start_date = request.args.get('start_date')
-   end_date = request.args.get('end_date')
-   data_type = request.args.get('data_type')
+    Returns:
+        json: Weather data for the specified date range and data type, or an error message.
+    """
+    # Retrieve query parameters from the request
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    data_type = request.args.get('data_type')
 
-   # Check if any required parameters are missing
-   if not start_date or not end_date or not data_type:
-       return jsonify({"error": "Missing required parameters"}), 400
+    # Check if any required parameters are missing
+    if not start_date or not end_date or not data_type:
+        return jsonify({"error": "Missing required parameters"}), 400
 
-   # Validate the date range
-   try:
-       start_index = dates.index(start_date)
-       end_index = dates.index(end_date) + 1
-   except ValueError:
-       return jsonify({"error": "Invalid date range"}), 400
+    # Validate the date range
+    try:
+        start_index = dates.index(start_date)
+        end_index = dates.index(end_date) + 1
+    except ValueError:
+        return jsonify({"error": "Invalid date range"}), 400
 
-   # Map the data type to the corresponding data list
-   data = {
-       'Weather Code': weatherCode,
-       'Temp Low': temperatureMin,
-       'Temp High': temperatureMax,
-       'Precipitation Amount': precipitationSum,
-       'Wind Speed': windSpeedMax,
-       'Precipitation Probability': precipitationProbabilityMax
-   }.get(data_type)
+    # Map the data type to the corresponding data list
+    data = {
+        'Weather Code': weatherCode,
+        'Temp Low': temperatureMin,
+        'Temp High': temperatureMax,
+        'Precipitation Amount': precipitationSum,
+        'Wind Speed': windSpeedMax,
+        'Precipitation Probability': precipitationProbabilityMax
+    }.get(data_type)
 
-   # Check if the data type is valid
-   if not data:
-       return jsonify({"error": "Invalid data type"}), 400
+    # Check if the data type is valid
+    if not data:
+        return jsonify({"error": "Invalid data type"}), 400
 
-   # Generate the result dictionary for the specified date range
-   result = {dates[i]: data[i] for i in range(start_index, end_index)}
-   return jsonify(result)
+    # Generate the result dictionary for the specified date range
+    result = {dates[i]: data[i] for i in range(start_index, end_index)}
+    return jsonify(result)
+
 
 @flask_app.route('/weather', methods=['POST'])
 def add_weather():
-   """
-   Add new weather data.
+    """
+    Add new weather data.
 
-   This method adds new weather data to the existing lists. The new data must
-   include a date, and the date must not already exist in the data. If the
-   data format is invalid or the date already exists, it returns an error message.
+    This method adds new weather data to the existing lists. The new data must
+    include a date, and the date must not already exist in the data. If the
+    data format is invalid or the date already exists, it returns an error message.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       json: Success message or an error message.
-   """
-   # Retrieve the new data from the request body
-   new_data = request.json
-   if not new_data or 'date' not in new_data:
-       return jsonify({"error": "Invalid data format"}), 400
+    Returns:
+        json: Success message or an error message.
+    """
+    # Retrieve the new data from the request body
+    new_data = request.json
+    if not new_data or 'date' not in new_data:
+        return jsonify({"error": "Invalid data format"}), 400
 
-   # Extract the date from the new data
-   date = new_data['date']
-   # Check if the date already exists
-   if date in dates:
-       return jsonify({"error": "Date already exists"}), 400
+    # Extract the date from the new data
+    date = new_data['date']
+    # Check if the date already exists
+    if date in dates:
+        return jsonify({"error": "Date already exists"}), 400
 
-   # Append the new data to the corresponding lists
-   dates.append(date)
-   weatherCode.append(str(new_data.get('weather_code', '')))
-   temperatureMax.append(str(new_data.get('temperature_max', '')))
-   temperatureMin.append(str(new_data.get('temperature_min', '')))
-   precipitationSum.append(str(new_data.get('precipitation_sum', '')))
-   windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
-   precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
+    # Append the new data to the corresponding lists
+    dates.append(date)
+    weatherCode.append(str(new_data.get('weather_code', '')))
+    temperatureMax.append(str(new_data.get('temperature_max', '')))
+    temperatureMin.append(str(new_data.get('temperature_min', '')))
+    precipitationSum.append(str(new_data.get('precipitation_sum', '')))
+    windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
+    precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
 
-   app.update_api()
-   return jsonify({"message": "Data added successfully"}), 201
+    app.update_api()
+    return jsonify({"message": "Data added successfully"}), 201
 
 
 @flask_app.route('/weather', methods=['PUT'])
 def update_weather():
-   """
-   Update existing weather data.
+    """
+    Update existing weather data.
 
-   This method updates a specific data point for a given date. The request must
-   include the date, data point, and the new value. If the data format is invalid
-   or the date is not found, it returns an error message.
+    This method updates a specific data point for a given date. The request must
+    include the date, data point, and the new value. If the data format is invalid
+    or the date is not found, it returns an error message.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       json: Success message or an error message.
-   """
-   # Retrieve the update information from the request body
-   update_info = request.json
-   if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
-       return jsonify({"error": "Invalid update format"}), 400
+    Returns:
+        json: Success message or an error message.
+    """
+    # Retrieve the update information from the request body
+    update_info = request.json
+    if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
+        return jsonify({"error": "Invalid update format"}), 400
 
-   # Extract the date, data point, and value from the update information
-   date = update_info['date']
-   data_point = update_info['data_point']
-   value = update_info['value']
+    # Extract the date, data point, and value from the update information
+    date = update_info['date']
+    data_point = update_info['data_point']
+    value = update_info['value']
 
-   # Check if the date exists
-   if date not in dates:
-       return jsonify({"error": "Date not found"}), 404
+    # Check if the date exists
+    if date not in dates:
+        return jsonify({"error": "Date not found"}), 404
 
-   # Get the index of the date
-   index = dates.index(date)
-   # Update the corresponding data point
-   if data_point == 'Weather Code':
-       weatherCode[index] = str(value)
-   elif data_point == 'Temp Low':
-       temperatureMin[index] = str(value)
-   elif data_point == 'Temp High':
-       temperatureMax[index] = str(value)
-   elif data_point == 'Precipitation Amount':
-       precipitationSum[index] = str(value)
-   elif data_point == 'Wind Speed':
-       windSpeedMax[index] = str(value)
-   elif data_point == 'Precipitation Probability':
-       precipitationProbabilityMax[index] = str(value)
-   else:
-       return jsonify({"error": "Invalid data point"}), 400
+    # Get the index of the date
+    index = dates.index(date)
+    # Update the corresponding data point
+    if data_point == 'Weather Code':
+        weatherCode[index] = str(value)
+    elif data_point == 'Temp Low':
+        temperatureMin[index] = str(value)
+    elif data_point == 'Temp High':
+        temperatureMax[index] = str(value)
+    elif data_point == 'Precipitation Amount':
+        precipitationSum[index] = str(value)
+    elif data_point == 'Wind Speed':
+        windSpeedMax[index] = str(value)
+    elif data_point == 'Precipitation Probability':
+        precipitationProbabilityMax[index] = str(value)
+    else:
+        return jsonify({"error": "Invalid data point"}), 400
 
-   app.update_api()
-   return jsonify({"message": "Data updated successfully"})
+    app.update_api()
+    return jsonify({"message": "Data updated successfully"})
 
 
 @flask_app.route('/weather', methods=['DELETE'])
 def delete_weather():
-   """
-   Delete weather data for a specific date.
+    """
+    Delete weather data for a specific date.
 
-   This method deletes weather data for a given date. The date must be provided
-   as a query parameter. If the date is not found, it returns an error message.
+    This method deletes weather data for a given date. The date must be provided
+    as a query parameter. If the date is not found, it returns an error message.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       json: Success message or an error message.
-   """
-   # Retrieve the date from the query parameters
-   date = request.args.get('date')
-   if not date:
-       return jsonify({"error": "Date parameter is required"}), 400
+    Returns:
+        json: Success message or an error message.
+    """
+    # Retrieve the date from the query parameters
+    date = request.args.get('date')
+    if not date:
+        return jsonify({"error": "Date parameter is required"}), 400
 
-   # Check if the date exists
-   if date not in dates:
-       return jsonify({"error": "Date not found"}), 404
+    # Check if the date exists
+    if date not in dates:
+        return jsonify({"error": "Date not found"}), 404
 
-   # Get the index of the date
-   index = dates.index(date)
-   # Remove the data for the specified date
-   dates.pop(index)
-   weatherCode.pop(index)
-   temperatureMax.pop(index)
-   temperatureMin.pop(index)
-   precipitationSum.pop(index)
-   windSpeedMax.pop(index)
-   precipitationProbabilityMax.pop(index)
+    # Get the index of the date
+    index = dates.index(date)
+    # Remove the data for the specified date
+    dates.pop(index)
+    weatherCode.pop(index)
+    temperatureMax.pop(index)
+    temperatureMin.pop(index)
+    precipitationSum.pop(index)
+    windSpeedMax.pop(index)
+    precipitationProbabilityMax.pop(index)
 
-   app.update_api()
-   return jsonify({"message": "Data deleted successfully"})
+    app.update_api()
+    return jsonify({"message": "Data deleted successfully"})
 
 
 @flask_app.route('/')
 def home():
-   """
-   Home route.
+    """
+    Home route.
 
-   This method returns a simple message for the home route of the Flask app.
+    This method returns a simple message for the home route of the Flask app.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       str: A message indicating the landing page for the weather app.
-   """
-   return "this is the local host landing page for the weather app"
+    Returns:
+        str: A message indicating the landing page for the weather app.
+    """
+    return "this is the local host landing page for the weather app"
 
 
 def run_flask():
-   """
-   Run the Flask app.
+    """
+    Run the Flask app.
 
-   This method starts the Flask application with debugging enabled and without
-   the reloader.
+    This method starts the Flask application with debugging enabled and without
+    the reloader.
 
-   Args:
-       None
+    Args:
+        None
 
-   Returns:
-       None
-   """
-   flask_app.run(debug=True, use_reloader=False)
+    Returns:
+        None
+    """
+    flask_app.run(debug=True, use_reloader=False)
+
 
 if __name__ == "__main__":
     # Initialize the main window
