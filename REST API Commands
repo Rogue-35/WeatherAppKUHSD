@@ -3,10 +3,10 @@ GET:
   Specific: curl -X GET "http://localhost:5000/weather?start_date=2024-04-26&end_date=2024-04-29&data_type=Temp%20Low"
 POST:
   Generic:  curl -X POST http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"<date>\", \"weather_code\": <value>, \"temperature_max\": <value>, \"temperature_min\": <value>, \"precipitation_sum\": <value>, \"wind_speed_max\": <value>, \"precipitation_probability_max\": <value>}"
-  Specific: curl -X POST http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"2024-04-30\", \"weather_code\": 100, \"temperature_max\": 25, \"temperature_min\": 15, \"precipitation_sum\": 5, \"wind_speed_max\": 10, \"precipitation_probability_max\": 80}"
+  Specific: curl -X POST http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"2024-04-29\", \"weather_code\": 100, \"temperature_max\": 25, \"temperature_min\": 15, \"precipitation_sum\": 5, \"wind_speed_max\": 10, \"precipitation_probability_max\": 80}"
 DELETE:
   Generic:  curl -X DELETE "http://localhost:5000/weather?date=<date>"
-  Specific: curl -X DELETE "http://localhost:5000/weather?date=2024-04-30"
+  Specific: curl -X DELETE "http://localhost:5000/weather?date=2024-04-29"
 PUT:
   Generic:  curl -X PUT http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"<date>\", \"data_point\": \"<data type>\", \"value\": <value>}"
-  Specific: curl -X PUT http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"2024-04-30\", \"data_point\": \"Temp Low\", \"value\": 12}"
+  Specific: curl -X PUT http://localhost:5000/weather -H "Content-Type: application/json" -d "{\"date\": \"2024-04-29\", \"data_point\": \"Temp Low\", \"value\": 12}"
