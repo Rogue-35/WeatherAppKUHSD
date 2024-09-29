@@ -13,7 +13,8 @@
 # - Azure-ttk-theme - https://github.com/rdbende/Azure-ttk-theme
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import Label, ttk, filedialog, messagebox
+import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import asyncio
@@ -26,6 +27,7 @@ from retry_requests import retry
 import requests
 from flask import Flask, jsonify, request
 import threading
+import sys
 
 # Initialize Flask app
 flask_app = Flask(__name__)
@@ -148,8 +150,8 @@ class App(ttk.Frame):
     latitude_set = 0
     longitude_set = 0
 
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
+    def __init__(window, parent, theme, mode, usecommandlineargs=True, usethemeconfigfile=True):
+        ttk.Frame.__init__(window)
         """
         Initialize the frame with given parent widget.
 
@@ -158,120 +160,122 @@ class App(ttk.Frame):
         """
         # Make the app responsive
         for index in [0, 1, 2]:
-            self.columnconfigure(index=index, weight=1)
-            self.rowconfigure(index=index, weight=1)
+            window.columnconfigure(index=index, weight=1)
+            window.rowconfigure(index=index, weight=1)
 
         # Create lists of data types and categories
-        self.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
+        window.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                'Precipitation Probability']
-        self.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
+        window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                         'Precipitation Probability']
-        self.data_cat = ['Max', 'Min', 'Mean', 'Single']
+        window.data_cat = ['Max', 'Min', 'Mean', 'Single']
 
         # Set up all widgets within the frame
-        self.setup_widgets()
+        window.setup_widgets()
 
-    def setup_widgets(self):
+    def setup_widgets(window):
         """
         Set up all widgets within the frame.
 
         This method initializes and places various widgets including buttons, dropdowns, labels,
         and frames within the main frame of the application.
         """
+
+        
         # Header frame for upload and close buttons
-        self.header_frame = ttk.Frame(self, padding=(20, 10))
-        self.header_frame.grid(row=0, column=0, sticky="EW")
+        window.header_frame = ttk.Frame(window, padding=(20, 10))
+        window.header_frame.grid(row=0, column=0, sticky="EW")
 
         # Upload Button
-        self.upload_button = ttk.Button(self.header_frame, text="Upload Input File", command=self.upload_file)
-        self.upload_button.grid(row=0, column=0, padx=5, pady=5)
+        window.upload_button = ttk.Button(window.header_frame, text="Upload Input File", command=window.upload_file)
+        window.upload_button.grid(row=0, column=0, padx=5, pady=5)
 
         # Close Button
-        self.close_button = ttk.Button(self.header_frame, text="Close", command=self.quit)
-        self.close_button.grid(row=0, column=1, padx=5, pady=5)
+        window.close_button = ttk.Button(window.header_frame, text="Close", command=window.quit)
+        window.close_button.grid(row=0, column=1, padx=5, pady=5)
 
         # Body frame for notebook
-        self.body_frame = ttk.Frame(self)
-        self.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
+        window.body_frame = ttk.Frame(window)
+        window.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
 
         # Notebook widget for tabs
-        self.notebook = ttk.Notebook(self.body_frame)
-        self.notebook.pack(fill="both", expand=True)
+        window.notebook = ttk.Notebook(window.body_frame)
+        window.notebook.pack(fill="both", expand=True)
 
         # Tab #1: Data Output
-        self.tab_1 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_1, text="Data Output")
+        window.tab_1 = ttk.Frame(window.notebook)
+        window.notebook.add(window.tab_1, text="Data Output")
 
         # Statistics frame within Tab #1
-        self.weather_code_frame = ttk.LabelFrame(self.tab_1, text="Statistics", padding=(20, 10))
-        self.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
+        window.weather_code_frame = ttk.LabelFrame(window.tab_1, text="Statistics", padding=(20, 10))
+        window.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
         # Start Date Dropdown
-        self.start_date_dropdown = ttk.Combobox(self.tab_1, state="readonly", values=dates)
-        self.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
-        self.start_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+        window.start_date_dropdown = ttk.Combobox(window.tab_1, state="readonly", values=dates)
+        window.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
+        window.start_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
         # Data Type Dropdown
-        self.data_dropdown = ttk.Combobox(self.tab_1, state="readonly", values=self.data_type_list_complete)
-        self.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
-        self.data_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+        window.data_dropdown = ttk.Combobox(window.tab_1, state="readonly", values=window.data_type_list_complete)
+        window.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
+        window.data_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
         # Output Text Label
-        self.output_text = ttk.Label(self.weather_code_frame, text='', wraplength=675)
-        self.output_text.grid(row=0, column=0, padx=5, pady=5)
+        window.output_text = ttk.Label(window.weather_code_frame, text='', wraplength=675)
+        window.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude and Longitude Entry Fields
-        self.lat = ttk.Entry(self.tab_1, width=30)
-        self.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        self.lat.bind("<FocusOut>", self.lat_long_entry)
+        window.lat = ttk.Entry(window.tab_1, width=30)
+        window.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        window.lat.bind("<FocusOut>", window.lat_long_entry)
 
-        self.long = ttk.Entry(self.tab_1, width=30)
-        self.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        self.long.bind("<FocusOut>", self.lat_long_entry)
+        window.long = ttk.Entry(window.tab_1, width=30)
+        window.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        window.long.bind("<FocusOut>", window.lat_long_entry)
 
         # Tab #2: Histogram
-        self.tab_2 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_2, text="Histogram")
+        window.tab_2 = ttk.Frame(window.notebook)
+        window.notebook.add(window.tab_2, text="Histogram")
 
         # Histogram frame within Tab #2
-        self.histogram_frame = ttk.LabelFrame(self.tab_2, text="Histogram")
-        self.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
+        window.histogram_frame = ttk.LabelFrame(window.tab_2, text="Histogram")
+        window.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
 
         # Histogram Data Type Dropdown
-        self.histogram_data_type_dropdown = ttk.Combobox(
-            self.histogram_frame, state="readonly", values=self.data_type_list
+        window.histogram_data_type_dropdown = ttk.Combobox(
+            window.histogram_frame, state="readonly", values=window.data_type_list
         )
-        self.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
-        self.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+        window.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
+        window.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Histogram Start Date Dropdown
-        self.histogram_start_date_dropdown = ttk.Combobox(
-            self.histogram_frame, state="readonly", values=dates
+        window.histogram_start_date_dropdown = ttk.Combobox(
+            window.histogram_frame, state="readonly", values=dates
         )
-        self.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
-        self.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+        window.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
+        window.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Histogram End Date Dropdown
-        self.histogram_end_date_dropdown = ttk.Combobox(
-            self.histogram_frame, state="readonly", values=dates
+        window.histogram_end_date_dropdown = ttk.Combobox(
+            window.histogram_frame, state="readonly", values=dates
         )
-        self.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
-        self.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", self.plot_histogram)
+        window.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
+        window.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Canvas for Histogram
-        self.canvas = None
+        window.canvas = None
 
         # Tab #3: Credits
-        self.tab_3 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_3, text="Credits")
+        window.tab_3 = ttk.Frame(window.notebook)
+        window.notebook.add(window.tab_3, text="Credits")
 
         # Credits frame within Tab #3
-        self.credits = ttk.LabelFrame(self.tab_3, text="Credits", padding=(20, 10))
-        self.credits.grid(row=0, column=0, padx=10, pady=10)
+        window.credits = ttk.LabelFrame(window.tab_3, text="Credits", padding=(20, 10))
+        window.credits.grid(row=0, column=0, padx=10, pady=10)
 
         # Credits Text Box
-        self.credits_textbox = tk.Text(self.credits, wrap='word', height=30, width=90)
-        self.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
+        window.credits_textbox = tk.Text(window.credits, wrap='word', height=30, width=90)
+        window.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
 
         # Inserting Credits Information
         credits_text = (
@@ -287,14 +291,14 @@ class App(ttk.Frame):
             "- requests - A simple, yet elegant HTTP library.\n"
             "- Azure-ttk-theme - A modern theme for the Tkinter/ttk widgets."
         )
-        self.credits_textbox.insert('1.0', credits_text)
-        self.credits_textbox.config(state='disabled')  # Make the text box read-only
+        window.credits_textbox.insert('1.0', credits_text)
+        window.credits_textbox.config(state='disabled')  # Make the text box read-only
 
         # Configure grid weight to allow the text box to expand
-        self.credits.grid_rowconfigure(0, weight=1)
-        self.credits.grid_columnconfigure(0, weight=1)
+        window.credits.grid_rowconfigure(0, weight=1)
+        window.credits.grid_columnconfigure(0, weight=1)
 
-    def lat_long_entry(self, event):
+    def lat_long_entry(window, event):
         """
         Process latitude and longitude values entered by the user.
 
@@ -305,13 +309,13 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Get the latitude and longitude values from the Entry widgets
-        self.latitude_set = float(self.lat.get())
-        self.longitude_set = float(self.long.get())
+        window.latitude_set = float(window.lat.get())
+        window.longitude_set = float(window.long.get())
 
         # Call the evaluate method to process the latitude and longitude values
-        self.evaluate()
+        window.evaluate()
 
-    def data_test(self, event):
+    def data_test(window, event):
         """
         Handle changes when a new data type is selected.
 
@@ -323,29 +327,29 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Check if the selected data type is "Weather Code"
-        if self.data_dropdown.get() == "Weather Code":
+        if window.data_dropdown.get() == "Weather Code":
             # Hide data category dropdown if it exists
-            if hasattr(self, 'data_cat_dropdown'):
-                self.data_cat_dropdown.grid_remove()
+            if hasattr(window, 'data_cat_dropdown'):
+                window.data_cat_dropdown.grid_remove()
 
             # Hide end date dropdown if it exists
-            if hasattr(self, 'end_date_dropdown'):
-                self.end_date_dropdown.grid_remove()
+            if hasattr(window, 'end_date_dropdown'):
+                window.end_date_dropdown.grid_remove()
         else:
             # If data type is not "Weather Code", show data category dropdown
-            if not hasattr(self, 'data_cat_dropdown'):
-                self.data_cat_dropdown = ttk.Combobox(
-                    self.tab_1, state="readonly", values=self.data_cat
+            if not hasattr(window, 'data_cat_dropdown'):
+                window.data_cat_dropdown = ttk.Combobox(
+                    window.tab_1, state="readonly", values=window.data_cat
                 )
-                self.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
-                self.data_cat_dropdown.bind("<<ComboboxSelected>>", self.handle_data_category_selection)
+                window.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
+                window.data_cat_dropdown.bind("<<ComboboxSelected>>", window.handle_data_category_selection)
             else:
-                self.data_cat_dropdown.grid()
+                window.data_cat_dropdown.grid()
 
         # Call the evaluate method to process the changes
-        self.evaluate()
+        window.evaluate()
 
-    def handle_data_category_selection(self, event=None):
+    def handle_data_category_selection(window, event=None):
         """
         Handle changes when a new data category is selected.
 
@@ -357,26 +361,26 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Check if the selected data category is 'Single'
-        if self.data_cat_dropdown.get() == 'Single':
+        if window.data_cat_dropdown.get() == 'Single':
             # Hide end date dropdown if it exists
-            if hasattr(self, 'end_date_dropdown'):
-                self.end_date_dropdown.grid_remove()
+            if hasattr(window, 'end_date_dropdown'):
+                window.end_date_dropdown.grid_remove()
         else:
             # Show end date dropdown if it does not exist
-            if not hasattr(self, 'end_date_dropdown'):
-                self.end_date_dropdown = ttk.Combobox(
-                    self.tab_1, state="readonly"
+            if not hasattr(window, 'end_date_dropdown'):
+                window.end_date_dropdown = ttk.Combobox(
+                    window.tab_1, state="readonly"
                 )
-                self.end_date_dropdown['values'] = dates
-                self.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
-                self.end_date_dropdown.bind("<<ComboboxSelected>>", self.data_test)
+                window.end_date_dropdown['values'] = dates
+                window.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
+                window.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
             else:
-                self.end_date_dropdown.grid()
+                window.end_date_dropdown.grid()
 
         # Call the evaluate method to process the changes
-        self.evaluate()
+        window.evaluate()
 
-    def evaluate(self):
+    def evaluate(window):
         """
            Sets the output text based on user-selected data category and type.
 
@@ -391,234 +395,234 @@ class App(ttk.Frame):
              Displays minimum input and real data over a date range.
            """
         # sets the output for when Weather Code is selected
-        if self.data_dropdown.get() == "Weather Code":
-            selected_date = self.start_date_dropdown.get()
+        if window.data_dropdown.get() == "Weather Code":
+            selected_date = window.start_date_dropdown.get()
             if selected_date in dates:
                 index = dates.index(selected_date)
                 weather_code = int(float(weatherCode[index]))
-                weather_code_real = self.openMeteoSetup(index, index, "Weather Code", self.latitude_set,
-                                                        self.longitude_set)
-                self.output_text.config(
+                weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
+                                                        window.longitude_set)
+                window.output_text.config(
                     text="Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code,
-                                                                                            self.codes[weather_code],
+                                                                                            window.codes[weather_code],
                                                                                             int(weather_code_real),
-                                                                                            self.codes[
+                                                                                            window.codes[
                                                                                                 int(weather_code_real)]))
-                self.output_text.config(font=("Arial", 20))
+                window.output_text.config(font=("Arial", 20))
 
         # sets the output for when single is selected
-        elif self.data_cat_dropdown.get() == "Single":
-            self.output_text.config(font=("Arial", 20))
-            if self.data_dropdown.get() == "Temp Low":
-                selected_date = self.start_date_dropdown.get()
+        elif window.data_cat_dropdown.get() == "Single":
+            window.output_text.config(font=("Arial", 20))
+            if window.data_dropdown.get() == "Temp Low":
+                selected_date = window.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    low_temp = self.openMeteoSetup(index, index, "Temp Low", self.latitude_set, self.longitude_set)
-                    self.output_text.config(text="Input Low Temperature: {}C\n\nReal Low Temperature: {}F".format(
+                    low_temp = window.openMeteoSetup(index, index, "Temp Low", window.latitude_set, window.longitude_set)
+                    window.output_text.config(text="Input Low Temperature: {}C\n\nReal Low Temperature: {}F".format(
                         int(round(float(temperatureMin[index]), 0)), int(low_temp)))
-            elif self.data_dropdown.get() == "Temp High":
-                selected_date = self.start_date_dropdown.get()
+            elif window.data_dropdown.get() == "Temp High":
+                selected_date = window.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    high_temp = self.openMeteoSetup(index, index, "Temp High", self.latitude_set, self.longitude_set)
-                    self.output_text.config(text="Input High Temperature: {}C\n\nReal High Temperature: {}F".format(
+                    high_temp = window.openMeteoSetup(index, index, "Temp High", window.latitude_set, window.longitude_set)
+                    window.output_text.config(text="Input High Temperature: {}C\n\nReal High Temperature: {}F".format(
                         int(round(float(temperatureMax[index]), 0)), int(high_temp)))
-            elif self.data_dropdown.get() == "Precipitation Amount":
-                selected_date = self.start_date_dropdown.get()
+            elif window.data_dropdown.get() == "Precipitation Amount":
+                selected_date = window.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_sum = self.openMeteoSetup(index, index, "Precipitation Amount", self.latitude_set,
-                                                     self.longitude_set)
-                    self.output_text.config(
+                    precip_sum = window.openMeteoSetup(index, index, "Precipitation Amount", window.latitude_set,
+                                                     window.longitude_set)
+                    window.output_text.config(
                         text="Input Precipitation Amount: {} inches\n\nReal Precipitation Amount: {} inches".format(
                             int(round(float(precipitationSum[index]), 0)), int(precip_sum)))
-            elif self.data_dropdown.get() == "Wind Speed":
-                selected_date = self.start_date_dropdown.get()
+            elif window.data_dropdown.get() == "Wind Speed":
+                selected_date = window.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    wind_speed = self.openMeteoSetup(index, index, "Wind Speed", self.latitude_set, self.longitude_set)
-                    self.output_text.config(text="Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(
+                    wind_speed = window.openMeteoSetup(index, index, "Wind Speed", window.latitude_set, window.longitude_set)
+                    window.output_text.config(text="Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(
                         int(round(float(windSpeedMax[index]), 0)), int(wind_speed)))
-            elif self.data_dropdown.get() == "Precipitation Probability":
-                selected_date = self.start_date_dropdown.get()
+            elif window.data_dropdown.get() == "Precipitation Probability":
+                selected_date = window.start_date_dropdown.get()
                 if selected_date in dates:
                     index = dates.index(selected_date)
-                    precip_chance = self.openMeteoSetup(index, index, "Precipitation Probability", self.latitude_set,
-                                                        self.longitude_set)
-                    self.output_text.config(
+                    precip_chance = window.openMeteoSetup(index, index, "Precipitation Probability", window.latitude_set,
+                                                        window.longitude_set)
+                    window.output_text.config(
                         text="Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(
                             int(round(float(precipitationProbabilityMax[index]), 0)), int(precip_chance)))
 
         # sets the output for when Mean is selected
-        elif self.data_cat_dropdown.get() == "Mean":
-            self.output_text.config(font=("Arial", 20))
-            if self.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+        elif window.data_cat_dropdown.get() == "Mean":
+            window.output_text.config(font=("Arial", 20))
+            if window.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (
                             end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in
-                                     self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
-                                                         self.longitude_set)) / (end_date - start_date + 1)
-                self.output_text.config(
+                                     window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
+                                                         window.longitude_set)) / (end_date - start_date + 1)
+                window.output_text.config(
                     text="Average Input Low Temperature: {:.0f} C\n\nAverage Real Low Temperature: {:.0f} F".format(
                         mean_temp, mean_temp_real))
-            elif self.data_dropdown.get() == "Temp High":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Temp High":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (
                             end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in
-                                     self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
-                                                         self.longitude_set)) / (end_date - start_date + 1)
-                self.output_text.config(
+                                     window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
+                                                         window.longitude_set)) / (end_date - start_date + 1)
+                window.output_text.config(
                     text="Average Input High Temperature: {:.0f} C\n\nAverage Real High Temperature: {:.0f} F".format(
                         mean_temp, mean_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (
                             end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in
-                                     self.openMeteoSetup(start_date, end_date, "Precipitation Amount",
-                                                         self.latitude_set, self.longitude_set)) / (
+                                     window.openMeteoSetup(start_date, end_date, "Precipitation Amount",
+                                                         window.latitude_set, window.longitude_set)) / (
                                              end_date - start_date + 1)
-                self.output_text.config(
+                window.output_text.config(
                     text="Average Input Precipitation Amount: {:.0f} inches\n\nAverage Real Precipitation Amount: {:.0f} inches".format(
                         mean_temp, mean_temp_real))
-            elif self.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (
                             end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in
-                                     self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
-                                                         self.longitude_set)) / (end_date - start_date + 1)
-                self.output_text.config(
+                                     window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
+                                                         window.longitude_set)) / (end_date - start_date + 1)
+                window.output_text.config(
                     text="Average Input Max Wind Speed: {:.0f} mph\n\nAverage Real Max Wind Speed: {:.0f} mph".format(
                         mean_temp, mean_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (
                             end_date - start_date + 1)
                 mean_temp_real = sum(float(temp) for temp in
-                                     self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                         self.latitude_set, self.longitude_set)) / (
+                                     window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                         window.latitude_set, window.longitude_set)) / (
                                              end_date - start_date + 1)
-                self.output_text.config(
+                window.output_text.config(
                     text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(
                         mean_temp, mean_temp_real))
 
         # sets the output for when Max is selected
-        elif self.data_cat_dropdown.get() == "Max":
-            self.output_text.config(font=("Arial", 20))
-            if self.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+        elif window.data_cat_dropdown.get() == "Max":
+            window.output_text.config(font=("Arial", 20))
+            if window.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMin[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Maximum Input Low Temperature: {:.0f} C\n\nMaximum Real Low Temperature: {:.0f} F".format(
                         max_temp, max_temp_real))
-            elif self.data_dropdown.get() == "Temp High":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Temp High":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in temperatureMax[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Maximum Input High Temperature: {:.0f} C\n\nMaximum Real High Temperature: {:.0f} F".format(
                         max_temp, max_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationSum[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Precipitation Amount", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Maximum Input Precipitation Amount: {:.0f} inches\n\nMaximum Real Precipitation Amount: {:.0f} inches".format(
                         max_temp, max_temp_real))
-            elif self.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Maximum Input Wind Speed: {:.0f} mph\n\nMaximum Real Wind Speed: {:.0f} mph".format(max_temp,
                                                                                                               max_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
                 max_temp_real = max(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                        self.latitude_set, self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                        window.latitude_set, window.longitude_set))
+                window.output_text.config(
                     text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(
                         max_temp, max_temp_real))
 
         # sets the output for when Min is selected
-        elif self.data_cat_dropdown.get() == "Min":
-            self.output_text.config(font=("Arial", 20))
-            if self.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+        elif window.data_cat_dropdown.get() == "Min":
+            window.output_text.config(font=("Arial", 20))
+            if window.data_dropdown.get() == "Temp Low":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Temp Low", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Minimum Input Low Temperature: {:.0f} C\n\nMinimum Real Low Temperature: {:.0f} F".format(
                         min_temp, min_temp_real))
-            elif self.data_dropdown.get() == "Temp High":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Temp High":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in temperatureMax[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Temp High", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Minimum Input High Temperature: {:.0f} C\n\nMinimum Real High Temperature: {:.0f} F".format(
                         min_temp, min_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Amount":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationSum[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Precipitation Amount", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Precipitation Amount", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Minimum Input Precipitation Amount: {:.0f} inches\n\nMinimum Real Precipitation Amount: {:.0f} inches".format(
                         min_temp, min_temp_real))
-            elif self.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Wind Speed":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Wind Speed", self.latitude_set,
-                                                        self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
+                                                        window.longitude_set))
+                window.output_text.config(
                     text="Minimum Input Max Wind Speed: {:.0f} mph\n\nMinimum Real Max Wind Speed: {:.0f} mph".format(
                         min_temp, min_temp_real))
-            elif self.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(self.start_date_dropdown.get())
-                end_date = dates.index(self.end_date_dropdown.get())
+            elif window.data_dropdown.get() == "Precipitation Probability":
+                start_date = dates.index(window.start_date_dropdown.get())
+                end_date = dates.index(window.end_date_dropdown.get())
                 min_temp = min(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
                 min_temp_real = min(float(temp) for temp in
-                                    self.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                        self.latitude_set, self.longitude_set))
-                self.output_text.config(
+                                    window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
+                                                        window.latitude_set, window.longitude_set))
+                window.output_text.config(
                     text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(
                         min_temp, min_temp_real))
 
-    def write_file(self, input):
+    def write_file(window, input):
         """
         Parse input data and assign values to global variables representing weather data.
 
@@ -670,23 +674,23 @@ class App(ttk.Frame):
         print("Max Wind Speed: ", windSpeedMax)
         print("Precipitation Probability Max: ", precipitationProbabilityMax)
 
-        self.histogram_start_date_dropdown['values'] = dates
-        self.histogram_end_date_dropdown['values'] = dates
-        self.start_date_dropdown['values'] = dates
-        self.end_date_dropdown['values'] = dates
+        window.histogram_start_date_dropdown['values'] = dates
+        window.histogram_end_date_dropdown['values'] = dates
+        window.start_date_dropdown['values'] = dates
+        window.end_date_dropdown['values'] = dates
 
-    def update_api(self):
+    def update_api(window):
         """
             Updates the date dropdowns when the REST API is used
 
             Args: None
 
         """
-        self.start_date_dropdown['values'] = dates
-        self.end_date_dropdown['values'] = dates
+        window.start_date_dropdown['values'] = dates
+        window.end_date_dropdown['values'] = dates
 
     # Uploads file
-    def upload_file(self):
+    def upload_file(window):
         """
         Open a file dialog to select a file and read its contents.
 
@@ -706,11 +710,11 @@ class App(ttk.Frame):
             try:
                 with open(file_path, 'r') as file:
                     text = file.read()
-                    self.write_file(text)
+                    window.write_file(text)
             except FileNotFoundError:
                 messagebox.showerror(title='Error', message='File Read Error')
 
-    def plot_histogram(self, event):
+    def plot_histogram(window, event):
         """
         Plot a histogram based on selected data type and date range.
 
@@ -724,9 +728,9 @@ class App(ttk.Frame):
         Clears previous plot if it exists and updates the canvas with the new histogram.
 
         """
-        data_type = self.histogram_data_type_dropdown.get()
-        start_date = self.histogram_start_date_dropdown.get()
-        end_date = self.histogram_end_date_dropdown.get()
+        data_type = window.histogram_data_type_dropdown.get()
+        start_date = window.histogram_start_date_dropdown.get()
+        end_date = window.histogram_end_date_dropdown.get()
 
         if data_type and start_date and end_date:
             start_index = dates.index(start_date)
@@ -764,14 +768,14 @@ class App(ttk.Frame):
                 fig.tight_layout()
 
                 # Clear previous plot
-                if self.canvas:
-                    self.canvas.get_tk_widget().destroy()
+                if window.canvas:
+                    window.canvas.get_tk_widget().destroy()
 
-                self.canvas = FigureCanvasTkAgg(fig, master=self.histogram_frame)
-                self.canvas.draw()
-                self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
+                window.canvas = FigureCanvasTkAgg(fig, master=window.histogram_frame)
+                window.canvas.draw()
+                window.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
-    def openMeteoSetup(self, start_date, end_date, data_type_input, latitude, longitude):
+    def openMeteoSetup(window, start_date, end_date, data_type_input, latitude, longitude):
         """
         Set up and retrieve weather data from Open-Meteo API.
 
@@ -859,7 +863,7 @@ class App(ttk.Frame):
         elif (data_type_input == "Weather Code"):
             return daily_weather_code
 
-    def write_file(self, input):
+    def write_file(window, input):
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
         lines = input.split('\n')
         for line in lines:
@@ -881,10 +885,10 @@ class App(ttk.Frame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
-        self.histogram_start_date_dropdown['values'] = dates
-        self.histogram_end_date_dropdown['values'] = dates
-        self.start_date_dropdown['values'] = dates
-        self.end_date_dropdown['values'] = dates
+        window.histogram_start_date_dropdown['values'] = dates
+        window.histogram_end_date_dropdown['values'] = dates
+        window.start_date_dropdown['values'] = dates
+        window.end_date_dropdown['values'] = dates
 
 
 # REST API routes
@@ -1100,33 +1104,35 @@ def run_flask():
 
 if __name__ == "__main__":
     # Initialize the main window
-    root = tk.Tk()
-    root.title("Weather App")
+    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD","park","dark")
+    #root = tk.Tk()
+    window.root.title("Weather App")
 
     # Set the theme
-    root.tk.call("source", "azure.tcl")
-    root.tk.call("set_theme", "dark")
+
+    #window.tk.call("source", "azure.tcl")
+    #window.tk.call("set_theme", "dark")
 
     # Create and pack the main application frame
-    app = App(root)
+    app = App(window.root, "azure","dark")
     app.pack(fill="both", expand=True)
 
-    # Update the root window to calculate the minimum size
-    root.update_idletasks()
-    root.minsize(root.winfo_width(), root.winfo_height())
+    # Update the window window to calculate the minimum size
+    window.root.update_idletasks()
+    window.root.minsize(window.root.winfo_width(), window.root.winfo_height())
 
     # Center the window on the screen
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    window_width = root.winfo_width()
-    window_height = root.winfo_height()
+    screen_width = window.root.winfo_screenwidth()
+    screen_height = window.root.winfo_screenheight()
+    window_width = window.root.winfo_width()
+    window_height = window.root.winfo_height()
     x_cordinate = (screen_width // 2) - (window_width // 2)
     y_cordinate = (screen_height // 2) - (window_height // 2) - 20
-    root.geometry(f"{window_width}x{window_height}+{x_cordinate}+{y_cordinate}")
+    window.root.geometry(f"{window_width}x{window_height}+{x_cordinate}+{y_cordinate}")
 
     # Start the Flask app in a separate thread
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
 
     # Start the Tkinter main loop
-    root.mainloop()
+    window.root.mainloop()
