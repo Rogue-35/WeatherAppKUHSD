@@ -13,21 +13,16 @@
 # - Azure-ttk-theme - https://github.com/rdbende/Azure-ttk-theme
 
 import tkinter as tk
-from tkinter import Label, ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox
 import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import asyncio
-from open_meteo import OpenMeteo
-from open_meteo.models import DailyParameters
 import openmeteo_requests
 import requests_cache
-import pandas as pd
 from retry_requests import retry
-import requests
 from flask import Flask, jsonify, request
 import threading
-import sys
+import psutil
 
 # Initialize Flask app
 flask_app = Flask(__name__)
@@ -191,8 +186,8 @@ class App(ttk.Frame):
         window.upload_button.grid(row=0, column=0, padx=5, pady=5)
 
         # Close Button
-        window.close_button = ttk.Button(window.header_frame, text="Close", command=window.quit)
-        window.close_button.grid(row=0, column=1, padx=5, pady=5)
+        window.close_button = ttk.Button(window.header_frame, text="Close", command=window.quitapp)
+        window.close_button.grid(row=0, column=1, padx=5, pady=5, sticky='NSE')
 
         # Body frame for notebook
         window.body_frame = ttk.Frame(window)
@@ -372,6 +367,8 @@ class App(ttk.Frame):
                     window.tab_1, state="readonly"
                 )
                 window.end_date_dropdown['values'] = dates
+                window.end_date_dropdown.current(1)
+                window.start_date_dropdown.current(0)
                 window.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
                 window.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
             else:
@@ -382,245 +379,77 @@ class App(ttk.Frame):
 
     def evaluate(window):
         """
-           Sets the output text based on user-selected data category and type.
+        Sets the output text based on user-selected data category and type.
+        """
+        data_type = window.data_dropdown.get()
+        category = window.data_cat_dropdown.get() if hasattr(window, 'data_cat_dropdown') else None
 
-           - Weather Code: Displays input and real weather codes for a selected date.
-           - Single (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
-             Compares input and real data for a single date.
-           - Mean (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
-             Calculates and displays average input and real data over a date range.
-           - Max (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
-             Displays maximum input and real data over a date range.
-           - Min (Temp Low, Temp High, Precipitation Amount, Wind Speed, Precipitation Probability):
-             Displays minimum input and real data over a date range.
-           """
-        # sets the output for when Weather Code is selected
-        if window.data_dropdown.get() == "Weather Code":
-            selected_date = window.start_date_dropdown.get()
-            if selected_date in dates:
-                index = dates.index(selected_date)
-                weather_code = int(float(weatherCode[index]))
-                weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
-                                                        window.longitude_set)
-                window.output_text.config(
-                    text="Input Weather Code: {} - {}\n\nReal Weather Code: {} - {}".format(weather_code,
-                                                                                            window.codes[weather_code],
-                                                                                            int(weather_code_real),
-                                                                                            window.codes[
-                                                                                                int(weather_code_real)]))
-                window.output_text.config(font=("Arial", 20))
+        if data_type == "Weather Code":
+            window._handle_weather_code()
+        elif category == "Single":
+            window._handle_single_data(data_type)
+        elif category in ["Mean", "Max", "Min"]:
+            window._handle_aggregate_data(data_type, category)
 
-        # sets the output for when single is selected
-        elif window.data_cat_dropdown.get() == "Single":
-            window.output_text.config(font=("Arial", 20))
-            if window.data_dropdown.get() == "Temp Low":
-                selected_date = window.start_date_dropdown.get()
-                if selected_date in dates:
-                    index = dates.index(selected_date)
-                    low_temp = window.openMeteoSetup(index, index, "Temp Low", window.latitude_set, window.longitude_set)
-                    window.output_text.config(text="Input Low Temperature: {}C\n\nReal Low Temperature: {}F".format(
-                        int(round(float(temperatureMin[index]), 0)), int(low_temp)))
-            elif window.data_dropdown.get() == "Temp High":
-                selected_date = window.start_date_dropdown.get()
-                if selected_date in dates:
-                    index = dates.index(selected_date)
-                    high_temp = window.openMeteoSetup(index, index, "Temp High", window.latitude_set, window.longitude_set)
-                    window.output_text.config(text="Input High Temperature: {}C\n\nReal High Temperature: {}F".format(
-                        int(round(float(temperatureMax[index]), 0)), int(high_temp)))
-            elif window.data_dropdown.get() == "Precipitation Amount":
-                selected_date = window.start_date_dropdown.get()
-                if selected_date in dates:
-                    index = dates.index(selected_date)
-                    precip_sum = window.openMeteoSetup(index, index, "Precipitation Amount", window.latitude_set,
-                                                     window.longitude_set)
-                    window.output_text.config(
-                        text="Input Precipitation Amount: {} inches\n\nReal Precipitation Amount: {} inches".format(
-                            int(round(float(precipitationSum[index]), 0)), int(precip_sum)))
-            elif window.data_dropdown.get() == "Wind Speed":
-                selected_date = window.start_date_dropdown.get()
-                if selected_date in dates:
-                    index = dates.index(selected_date)
-                    wind_speed = window.openMeteoSetup(index, index, "Wind Speed", window.latitude_set, window.longitude_set)
-                    window.output_text.config(text="Input Max Wind Speed: {} mph\n\nReal Max Wind Speed: {} mph".format(
-                        int(round(float(windSpeedMax[index]), 0)), int(wind_speed)))
-            elif window.data_dropdown.get() == "Precipitation Probability":
-                selected_date = window.start_date_dropdown.get()
-                if selected_date in dates:
-                    index = dates.index(selected_date)
-                    precip_chance = window.openMeteoSetup(index, index, "Precipitation Probability", window.latitude_set,
-                                                        window.longitude_set)
-                    window.output_text.config(
-                        text="Input Precipitation Percent Chance: {}%\n\nReal Precipitation Percent Chance: {}%".format(
-                            int(round(float(precipitationProbabilityMax[index]), 0)), int(precip_chance)))
+    def _handle_weather_code(window):
+        selected_date = window.start_date_dropdown.get()
+        if selected_date in dates:
+            index = dates.index(selected_date)
+            weather_code = int(float(weatherCode[index]))
+            weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set, window.longitude_set)
+            window._set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
+                             f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
 
-        # sets the output for when Mean is selected
-        elif window.data_cat_dropdown.get() == "Mean":
-            window.output_text.config(font=("Arial", 20))
-            if window.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in temperatureMin[start_date:end_date + 1]) / (
-                            end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in
-                                     window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
-                                                         window.longitude_set)) / (end_date - start_date + 1)
-                window.output_text.config(
-                    text="Average Input Low Temperature: {:.0f} C\n\nAverage Real Low Temperature: {:.0f} F".format(
-                        mean_temp, mean_temp_real))
-            elif window.data_dropdown.get() == "Temp High":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in temperatureMax[start_date:end_date + 1]) / (
-                            end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in
-                                     window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
-                                                         window.longitude_set)) / (end_date - start_date + 1)
-                window.output_text.config(
-                    text="Average Input High Temperature: {:.0f} C\n\nAverage Real High Temperature: {:.0f} F".format(
-                        mean_temp, mean_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in precipitationSum[start_date:end_date + 1]) / (
-                            end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in
-                                     window.openMeteoSetup(start_date, end_date, "Precipitation Amount",
-                                                         window.latitude_set, window.longitude_set)) / (
-                                             end_date - start_date + 1)
-                window.output_text.config(
-                    text="Average Input Precipitation Amount: {:.0f} inches\n\nAverage Real Precipitation Amount: {:.0f} inches".format(
-                        mean_temp, mean_temp_real))
-            elif window.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in windSpeedMax[start_date:end_date + 1]) / (
-                            end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in
-                                     window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
-                                                         window.longitude_set)) / (end_date - start_date + 1)
-                window.output_text.config(
-                    text="Average Input Max Wind Speed: {:.0f} mph\n\nAverage Real Max Wind Speed: {:.0f} mph".format(
-                        mean_temp, mean_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                mean_temp = sum(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1]) / (
-                            end_date - start_date + 1)
-                mean_temp_real = sum(float(temp) for temp in
-                                     window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                         window.latitude_set, window.longitude_set)) / (
-                                             end_date - start_date + 1)
-                window.output_text.config(
-                    text="Average Input Precipitation Percent Chance: {:.0f}%\n\nAverage Real Precipitation Percent Chance: {:.0f}%".format(
-                        mean_temp, mean_temp_real))
+    def _handle_single_data(window, data_type):
+        selected_date = window.start_date_dropdown.get()
+        if selected_date in dates:
+            index = dates.index(selected_date)
+            real_data = window.openMeteoSetup(index, index, data_type, window.latitude_set, window.longitude_set)
+            input_data = window._get_input_data(data_type, index)
+            window._set_output(f"Input {data_type}: {input_data}\n\nReal {data_type}: {real_data}")
 
-        # sets the output for when Max is selected
-        elif window.data_cat_dropdown.get() == "Max":
-            window.output_text.config(font=("Arial", 20))
-            if window.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                max_temp = max(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Maximum Input Low Temperature: {:.0f} C\n\nMaximum Real Low Temperature: {:.0f} F".format(
-                        max_temp, max_temp_real))
-            elif window.data_dropdown.get() == "Temp High":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                max_temp = max(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Maximum Input High Temperature: {:.0f} C\n\nMaximum Real High Temperature: {:.0f} F".format(
-                        max_temp, max_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                max_temp = max(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Precipitation Amount", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Maximum Input Precipitation Amount: {:.0f} inches\n\nMaximum Real Precipitation Amount: {:.0f} inches".format(
-                        max_temp, max_temp_real))
-            elif window.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                max_temp = max(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Maximum Input Wind Speed: {:.0f} mph\n\nMaximum Real Wind Speed: {:.0f} mph".format(max_temp,
-                                                                                                              max_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                max_temp = max(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                max_temp_real = max(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                        window.latitude_set, window.longitude_set))
-                window.output_text.config(
-                    text="Maximum Input Precipitation Probability: {:.0f}%\n\nMaximum Real Precipitation Probability: {:.0f}%".format(
-                        max_temp, max_temp_real))
+    def _handle_aggregate_data(window, data_type, category):
+        start_date = dates.index(window.start_date_dropdown.get())
+        end_date = dates.index(window.end_date_dropdown.get())
+        input_data = window._calculate_aggregate(window._get_input_data_list(data_type), start_date, end_date, category)
+        real_data = window._calculate_aggregate(
+            window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set),
+            0, end_date - start_date, category
+        )
+        window._set_output(
+            f"{category} Input {data_type}: {input_data:.0f}\n\n{category} Real {data_type}: {real_data:.0f}")
 
-        # sets the output for when Min is selected
-        elif window.data_cat_dropdown.get() == "Min":
-            window.output_text.config(font=("Arial", 20))
-            if window.data_dropdown.get() == "Temp Low":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                min_temp = min(float(temp) for temp in temperatureMin[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Temp Low", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Minimum Input Low Temperature: {:.0f} C\n\nMinimum Real Low Temperature: {:.0f} F".format(
-                        min_temp, min_temp_real))
-            elif window.data_dropdown.get() == "Temp High":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                min_temp = min(float(temp) for temp in temperatureMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Temp High", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Minimum Input High Temperature: {:.0f} C\n\nMinimum Real High Temperature: {:.0f} F".format(
-                        min_temp, min_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Amount":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                min_temp = min(float(temp) for temp in precipitationSum[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Precipitation Amount", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Minimum Input Precipitation Amount: {:.0f} inches\n\nMinimum Real Precipitation Amount: {:.0f} inches".format(
-                        min_temp, min_temp_real))
-            elif window.data_dropdown.get() == "Wind Speed":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                min_temp = min(float(temp) for temp in windSpeedMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Wind Speed", window.latitude_set,
-                                                        window.longitude_set))
-                window.output_text.config(
-                    text="Minimum Input Max Wind Speed: {:.0f} mph\n\nMinimum Real Max Wind Speed: {:.0f} mph".format(
-                        min_temp, min_temp_real))
-            elif window.data_dropdown.get() == "Precipitation Probability":
-                start_date = dates.index(window.start_date_dropdown.get())
-                end_date = dates.index(window.end_date_dropdown.get())
-                min_temp = min(float(temp) for temp in precipitationProbabilityMax[start_date:end_date + 1])
-                min_temp_real = min(float(temp) for temp in
-                                    window.openMeteoSetup(start_date, end_date, "Precipitation Probability",
-                                                        window.latitude_set, window.longitude_set))
-                window.output_text.config(
-                    text="Minimum Input Precipitation Probability: {:.0f}%\n\nMinimum Real Precipitation Probability: {:.0f}%".format(
-                        min_temp, min_temp_real))
+    def _get_input_data(window, data_type, index):
+        data_mapping = {
+            "Temp Low": (temperatureMin, "C"),
+            "Temp High": (temperatureMax, "C"),
+            "Precipitation Amount": (precipitationSum, "inches"),
+            "Wind Speed": (windSpeedMax, "mph"),
+            "Precipitation Probability": (precipitationProbabilityMax, "%")
+        }
+        data_list, unit = data_mapping[data_type]
+        return f"{int(round(float(data_list[index]), 0))} {unit}"
+
+    def _get_input_data_list(window, data_type):
+        return {
+            "Temp Low": temperatureMin,
+            "Temp High": temperatureMax,
+            "Precipitation Amount": precipitationSum,
+            "Wind Speed": windSpeedMax,
+            "Precipitation Probability": precipitationProbabilityMax
+        }[data_type]
+
+    def _calculate_aggregate(window, data_list, start, end, category):
+        values = [float(temp) for temp in data_list[start:end + 1]]
+        if category == "Mean":
+            return sum(values) / len(values)
+        elif category == "Max":
+            return max(values)
+        elif category == "Min":
+            return min(values)
+
+    def _set_output(window, text):
+        window.output_text.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
         """
@@ -776,36 +605,26 @@ class App(ttk.Frame):
                 window.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
     def openMeteoSetup(window, start_date, end_date, data_type_input, latitude, longitude):
-        """
-        Set up and retrieve weather data from Open-Meteo API.
-
-        Args:
-            start_date (int): Index of the start date in the `dates` list.
-            end_date (int): Index of the end date in the `dates` list.
-            data_type_input (str): Type of weather data to retrieve ('Temp Low', 'Temp High',
-                                   'Precipitation Amount', 'Precipitation Probability', 'Wind Speed',
-                                   'Weather Code').
-            latitude (float): Latitude coordinate for the weather location.
-            longitude (float): Longitude coordinate for the weather location.
-
-        Returns:
-            list or numpy.ndarray: Weather data based on the `data_type_input` parameter.
-
-        Sets up an Open-Meteo API client with caching and retries on error. Retrieves daily weather
-        data for the specified location and date range, converting it into a pandas DataFrame. Returns
-        the specific weather data type based on the `data_type_input`.
-        """
+        """Set up and retrieve weather data from Open-Meteo API."""
         start_date = dates[start_date]
         end_date = dates[end_date]
-        # Setup the Open-Meteo API client with cache and retry on error
+
+        client = window._setup_openmeteo_client()
+        params = window._build_api_params(start_date, end_date, latitude, longitude)
+        response = window._fetch_weather_data(client, params)
+        daily_data = window._process_daily_data(response)
+
+        return window._extract_requested_data(daily_data, data_type_input)
+
+    def _setup_openmeteo_client(window):
+        """Set up the Open-Meteo API client with cache and retry on error."""
         cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
         retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-        openmeteo = openmeteo_requests.Client(session=retry_session)
+        return openmeteo_requests.Client(session=retry_session)
 
-        # Make sure all required weather variables are listed here
-        # The order of variables in hourly or daily is important to assign them correctly below
-        url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
-        params = {
+    def _build_api_params(window, start_date, end_date, latitude, longitude):
+        """Build the parameters for the API request."""
+        return {
             "latitude": latitude,
             "longitude": longitude,
             "start_date": start_date,
@@ -816,52 +635,36 @@ class App(ttk.Frame):
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch"
         }
-        responses = openmeteo.weather_api(url, params=params)
 
-        # Process first location. Add a for-loop for multiple locations or weather models
-        response = responses[0]
-        print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-        print(f"Elevation {response.Elevation()} m asl")
-        print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-        print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+    def _fetch_weather_data(window, client, params):
+        """Fetch weather data from the Open-Meteo API."""
+        url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+        responses = client.weather_api(url, params=params)
+        return responses[0]
 
-        # Process daily data. The order of variables needs to be the same as requested.
+    def _process_daily_data(window, response):
+        """Process the daily data from the API response."""
         daily = response.Daily()
-        daily_weather_code = daily.Variables(0).ValuesAsNumpy()
-        daily_temperature_2m_max = daily.Variables(1).ValuesAsNumpy()
-        daily_temperature_2m_min = daily.Variables(2).ValuesAsNumpy()
-        daily_precipitation_sum = daily.Variables(3).ValuesAsNumpy()
-        daily_precipitation_probability_max = daily.Variables(4).ValuesAsNumpy()
-        daily_wind_speed_10m_max = daily.Variables(5).ValuesAsNumpy()
-
-        daily_data = {
-            "date": pd.date_range(
-                start=pd.to_datetime(daily.Time(), unit="s", utc=True),
-                end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
-                freq=pd.Timedelta(seconds=daily.Interval()),
-                inclusive="left"
-            ).tolist(),
-            "weather_code": daily_weather_code,
-            "temperature_2m_max": daily_temperature_2m_max,
-            "temperature_2m_min": daily_temperature_2m_min,
-            "precipitation_sum": daily_precipitation_sum,
-            "precipitation_probability_max": daily_precipitation_probability_max,
-            "wind_speed_10m_max": daily_wind_speed_10m_max
+        return {
+            "weather_code": daily.Variables(0).ValuesAsNumpy(),
+            "temperature_2m_max": daily.Variables(1).ValuesAsNumpy(),
+            "temperature_2m_min": daily.Variables(2).ValuesAsNumpy(),
+            "precipitation_sum": daily.Variables(3).ValuesAsNumpy(),
+            "precipitation_probability_max": daily.Variables(4).ValuesAsNumpy(),
+            "wind_speed_10m_max": daily.Variables(5).ValuesAsNumpy()
         }
 
-        daily_dataframe = pd.DataFrame(data=daily_data)
-        if (data_type_input == "Temp Low"):
-            return daily_temperature_2m_min
-        elif (data_type_input == "Temp High"):
-            return daily_temperature_2m_max
-        elif (data_type_input == "Precipitation Amount"):
-            return daily_precipitation_sum
-        elif (data_type_input == "Precipitation Probability"):
-            return daily_precipitation_probability_max
-        elif (data_type_input == "Wind Speed"):
-            return daily_wind_speed_10m_max
-        elif (data_type_input == "Weather Code"):
-            return daily_weather_code
+    def _extract_requested_data(window, daily_data, data_type_input):
+        """Extract the requested data type from the daily data."""
+        data_mapping = {
+            "Temp Low": "temperature_2m_min",
+            "Temp High": "temperature_2m_max",
+            "Precipitation Amount": "precipitation_sum",
+            "Precipitation Probability": "precipitation_probability_max",
+            "Wind Speed": "wind_speed_10m_max",
+            "Weather Code": "weather_code"
+        }
+        return daily_data[data_mapping[data_type_input]]
 
     def write_file(window, input):
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
@@ -889,6 +692,19 @@ class App(ttk.Frame):
         window.histogram_end_date_dropdown['values'] = dates
         window.start_date_dropdown['values'] = dates
         window.end_date_dropdown['values'] = dates
+
+    def quitapp(window):
+
+        for proc in processes:
+            try:
+                proc.terminate()  # Attempt to terminate the process
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                print(f"Failed to terminate {proc.info['name']} with PID {proc.info['pid']}. Access Denied.")
+
+        #window.quit()
+        #window.destroy()
+        #sys.exit(0000)
+
 
 
 # REST API routes
@@ -1101,8 +917,9 @@ def run_flask():
     """
     flask_app.run(debug=True, use_reloader=False)
 
-
 if __name__ == "__main__":
+    processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
+
     # Initialize the main window
     window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD","park","dark")
     #root = tk.Tk()
@@ -1117,7 +934,7 @@ if __name__ == "__main__":
     app = App(window.root, "azure","dark")
     app.pack(fill="both", expand=True)
 
-    # Update the window window to calculate the minimum size
+    # Update the window to calculate the minimum size
     window.root.update_idletasks()
     window.root.minsize(window.root.winfo_width(), window.root.winfo_height())
 
