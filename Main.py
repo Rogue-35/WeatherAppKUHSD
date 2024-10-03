@@ -159,9 +159,9 @@ class App(ttk.Frame):
 
         # Create lists of data types and categories
         window.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
-                               'Precipitation Probability']
+                                 'Precipitation Probability']
         window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
-                                        'Precipitation Probability']
+                                          'Precipitation Probability']
         window.data_cat = ['Max', 'Min', 'Mean', 'Single']
 
         # Set up all widgets within the frame
@@ -175,7 +175,6 @@ class App(ttk.Frame):
         and frames within the main frame of the application.
         """
 
-        
         # Header frame for upload and close buttons
         window.header_frame = ttk.Frame(window, padding=(20, 10))
         window.header_frame.grid(row=0, column=0, sticky="EW")
@@ -219,13 +218,33 @@ class App(ttk.Frame):
         window.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude and Longitude Entry Fields
-        window.lat = ttk.Entry(window.tab_1, width=30)
+        window.lat = ttk.Entry(window.tab_1, width=30,)
         window.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        window.lat.bind("<FocusOut>", window.lat_long_entry)
+        window.lat.bind('<0>', window.lat_long_entry)
+        window.lat.bind('<1>', window.lat_long_entry, add="+")
+        window.lat.bind('<2>', window.lat_long_entry, add="+")
+        window.lat.bind('<3>', window.lat_long_entry, add="+")
+        window.lat.bind('<4>', window.lat_long_entry, add="+")
+        window.lat.bind('<5>', window.lat_long_entry, add="+")
+        window.lat.bind('<6>', window.lat_long_entry, add="+")
+        window.lat.bind('<7>', window.lat_long_entry, add="+")
+        window.lat.bind('<8>', window.lat_long_entry, add="+")
+        window.lat.bind('<9>', window.lat_long_entry, add="+")
+
+
 
         window.long = ttk.Entry(window.tab_1, width=30)
         window.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        window.long.bind("<FocusOut>", window.lat_long_entry)
+        window.long.bind('<0>', window.lat_long_entry)
+        window.long.bind('<1>', window.lat_long_entry, add="+")
+        window.long.bind('<2>', window.lat_long_entry, add="+")
+        window.long.bind('<3>', window.lat_long_entry, add="+")
+        window.long.bind('<4>', window.lat_long_entry, add="+")
+        window.long.bind('<5>', window.lat_long_entry, add="+")
+        window.long.bind('<6>', window.lat_long_entry, add="+")
+        window.long.bind('<7>', window.lat_long_entry, add="+")
+        window.long.bind('<8>', window.lat_long_entry, add="+")
+        window.long.bind('<9>', window.lat_long_entry, add="+")
 
         # Tab #2: Histogram
         window.tab_2 = ttk.Frame(window.notebook)
@@ -303,8 +322,15 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Get the latitude and longitude values from the Entry widgets
-        window.latitude_set = float(window.lat.get())
-        window.longitude_set = float(window.long.get())
+        if window.lat.get() == '':
+            window.latitude_set = 0
+        else:
+            window.latitude_set = float(window.lat.get())
+
+        if window.long.get() == '':
+            window.longitude_set = 0
+        else:
+            window.longitude_set = float(window.long.get())
 
         # Call the evaluate method to process the latitude and longitude values
         window.evaluate()
@@ -390,14 +416,27 @@ class App(ttk.Frame):
         elif category in ["Mean", "Max", "Min"]:
             window._handle_aggregate_data(data_type, category)
 
+    def units(window):
+        data_type = window.data_dropdown.get()
+        if(data_type == "Weather Code"):
+            return
+        elif data_type == "Temp High" or data_type == "Temp Low":
+            return "F"
+        elif data_type == "Precipitation Amount":
+            return "inches"
+        elif data_type == "Wind Speed":
+            return "m/h"
+        elif data_type == "Precipitation Probability":
+            return "%"
     def _handle_weather_code(window):
         selected_date = window.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
             weather_code = int(float(weatherCode[index]))
-            weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set, window.longitude_set)
+            weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
+                                                      window.longitude_set)
             window._set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
-                             f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
+                               f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
 
     def _handle_single_data(window, data_type):
         selected_date = window.start_date_dropdown.get()
@@ -405,7 +444,7 @@ class App(ttk.Frame):
             index = dates.index(selected_date)
             real_data = window.openMeteoSetup(index, index, data_type, window.latitude_set, window.longitude_set)
             input_data = window._get_input_data(data_type, index)
-            window._set_output(f"Input {data_type}: {input_data}\n\nReal {data_type}: {real_data}")
+            window._set_output(f"Input {data_type}: {(float(input_data)):.0f} {window.units()}\n\nReal {data_type}: {real_data:.0f} {window.units()}")
 
     def _handle_aggregate_data(window, data_type, category):
         start_date = dates.index(window.start_date_dropdown.get())
@@ -416,18 +455,18 @@ class App(ttk.Frame):
             0, end_date - start_date, category
         )
         window._set_output(
-            f"{category} Input {data_type}: {input_data:.0f}\n\n{category} Real {data_type}: {real_data:.0f}")
+            f"{category} Input {data_type}: {input_data:.0f} {window.units()}\n\n{category} Real {data_type}: {real_data:.0f} {window.units()}")
 
     def _get_input_data(window, data_type, index):
         data_mapping = {
-            "Temp Low": (temperatureMin, "C"),
-            "Temp High": (temperatureMax, "C"),
-            "Precipitation Amount": (precipitationSum, "inches"),
-            "Wind Speed": (windSpeedMax, "mph"),
-            "Precipitation Probability": (precipitationProbabilityMax, "%")
+            "Temp Low": (temperatureMin),
+            "Temp High": (temperatureMax),
+            "Precipitation Amount": (precipitationSum),
+            "Wind Speed": (windSpeedMax),
+            "Precipitation Probability": (precipitationProbabilityMax)
         }
-        data_list, unit = data_mapping[data_type]
-        return f"{int(round(float(data_list[index]), 0))} {unit}"
+        data_list = data_mapping[data_type]
+        return f"{(data_list[index])}"
 
     def _get_input_data_list(window, data_type):
         return {
@@ -496,10 +535,10 @@ class App(ttk.Frame):
         # will be removed in final edit
         print("Dates: ", dates)
         print("Weather Codes: ", weatherCode)
-        print("Max Temperatures: ", temperatureMax)
-        print("Min Temperatures: ", temperatureMin)
+        print("Max Temperatures: ", temperatureMax + "F")
+        print("Min Temperatures: ", temperatureMin + "F")
         print("Precipitation Sum: ", precipitationSum)
-        print("Max Wind Speed: ", windSpeedMax)
+        print("Max Wind Speed: ", windSpeedMax + "mph")
         print("Precipitation Probability Max: ", precipitationProbabilityMax)
 
         window.histogram_start_date_dropdown['values'] = dates
@@ -690,7 +729,9 @@ class App(ttk.Frame):
         window.histogram_start_date_dropdown['values'] = dates
         window.histogram_end_date_dropdown['values'] = dates
         window.start_date_dropdown['values'] = dates
-        window.end_date_dropdown['values'] = dates
+        if hasattr(window, 'end_date_dropdown'):
+            window.end_date_dropdown['values'] = dates
+
 
     def quitapp(window):
 
@@ -700,10 +741,9 @@ class App(ttk.Frame):
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 print(f"Failed to terminate {proc.info['name']} with PID {proc.info['pid']}. Access Denied.")
 
-        #window.quit()
-        #window.destroy()
-        #sys.exit(0000)
-
+        # window.quit()
+        # window.destroy()
+        # sys.exit(0000)
 
 
 # REST API routes
@@ -916,21 +956,22 @@ def run_flask():
     """
     flask_app.run(debug=True, use_reloader=False)
 
+
 if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
     # Initialize the main window
-    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD","park","dark")
-    #root = tk.Tk()
+    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD", "park", "dark")
+    # root = tk.Tk()
     window.root.title("Weather App")
 
     # Set the theme
 
-    #window.tk.call("source", "azure.tcl")
-    #window.tk.call("set_theme", "dark")
+    # window.tk.call("source", "azure.tcl")
+    # window.tk.call("set_theme", "dark")
 
     # Create and pack the main application frame
-    app = App(window.root, "azure","dark")
+    app = App(window.root, "azure", "dark")
     app.pack(fill="both", expand=True)
 
     # Update the window to calculate the minimum size
