@@ -10,7 +10,6 @@
 # - retry_requests (version 2.0.0) - https://pypi.org/project/retry-requests/
 # - requests (version 2.32.3) - https://requests.readthedocs.io/
 # - Flask (version 3.0.3) - https://flask.palletsprojects.com/
-# - Azure-ttk-theme - https://github.com/rdbende/Azure-ttk-theme
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
