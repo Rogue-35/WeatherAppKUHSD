@@ -36,6 +36,7 @@ temperatureMin = []
 precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
+precision_slider_stored = 2 #Default value if not called - Prevent errors
 
 
 
@@ -402,7 +403,13 @@ class App(ttk.Frame):
         window.close_settings_button.grid(row=6, column=0, padx=10, pady=10, sticky="SE")
 
     def precision_slider(window):
-        return int(window.Precision_slider.get())
+
+        try:
+            return int(window.Precision_slider.get())
+        except:
+            return precision_slider_stored
+
+        #return int(window.Precision_slider.get())
 
     def curr_theme(window):
         return "Dark" if window.theme_var else "Light"
