@@ -36,7 +36,6 @@ temperatureMin = []
 precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
-precision_slider_stored = 2 #Default value if not called - Prevent errors
 
 
 
@@ -174,6 +173,8 @@ class App(ttk.Frame):
         window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                           'Precipitation Probability']
         window.data_cat = ['Max', 'Min', 'Mean', 'Single']
+
+        window.precision_slider_stored = 2  # Default value if not called - Prevent errors
 
         # Set up all widgets within the frame
         window.setup_widgets()
@@ -344,6 +345,8 @@ class App(ttk.Frame):
             self.configure(text=f"{self.text}: {state}")
 
     def setting_track(window):
+        window.precision_slider()
+        window.evaluate()
         window.open = False
         window.settings_popup.destroy()
 
@@ -391,7 +394,7 @@ class App(ttk.Frame):
 
         Precision_label = ttk.Label(settings_frame, text="Precision")
         Precision_label.grid(row=5, column=0, padx=10, pady=10, sticky="NW")
-        window.Precision_slider = ttk.Scale(settings_frame, from_=0, to=4, orient='horizontal')
+        window.Precision_slider = ttk.Scale(settings_frame, value=window.precision_slider_stored, from_=0, to=4, orient='horizontal')
         window.Precision_slider.grid(row=5, column=1, padx=10, pady=10, sticky="NSEW")
 
         # Create the close button
@@ -405,11 +408,10 @@ class App(ttk.Frame):
     def precision_slider(window):
 
         try:
-            return int(window.Precision_slider.get())
+            window.precision_slider_stored = int(window.Precision_slider.get())
+            return window.precision_slider_stored
         except:
-            return precision_slider_stored
-
-        #return int(window.Precision_slider.get())
+            return window.precision_slider_stored
 
     def curr_theme(window):
         return "Dark" if window.theme_var else "Light"
