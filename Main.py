@@ -11,9 +11,22 @@
 # - requests (version 2.32.3) - https://requests.readthedocs.io/
 # - Flask (version 3.0.3) - https://flask.palletsprojects.com/
 
+
+# project_root/
+# │
+# ├── main.py -
+# ├── gui.py - App class
+# ├── data.py
+# ├── restApi.py
+# ├── config.py
+# ├── requirements.txt
+# └── README.md
+
+
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from tkinter.ttk import Checkbutton
+from multiprocessing import Process
 
 import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
@@ -25,6 +38,9 @@ from retry_requests import retry
 from flask import Flask, jsonify, request
 import threading
 import psutil
+
+#import restApi
+import data
 
 # Initialize Flask app
 flask_app = Flask(__name__)
@@ -149,7 +165,7 @@ class App(TKMT.ThemedTKinterFrame):
     longitude_set = 0
 
     def __init__(window, theme, mode, usecommandlineargs=True, usethemeconfigfile=True):
-        super().__init__("WeatherAPPKUHSD", theme, mode, usecommandlineargs=usecommandlineargs, useconfigfile=usethemeconfigfile)
+        super().__init__("Orion Weather", theme, mode, usecommandlineargs=usecommandlineargs, useconfigfile=usethemeconfigfile)
 
         window.open = False
         window.theme = theme
@@ -161,8 +177,8 @@ class App(TKMT.ThemedTKinterFrame):
             parent (tk.Widget): Parent widget to which this frame belongs.
         """
 
-        window.theme_var = tk.BooleanVar(value=False)  # False for Light Mode
-        window.units_var = tk.BooleanVar(value=False)  # False for Imperial Units
+        window.theme_var = tk.BooleanVar(value=False)
+        window.units_var = tk.BooleanVar(value=True)  # False for Imperial Units
 
         # Make the app responsive
         for index in [0, 1, 2]:
@@ -231,6 +247,22 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
         window.root.data_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
+        #data category dropdown
+        window.root.data_cat_dropdown = ttk.Combobox(
+            window.root.tab_1, state="readonly", values=window.data_cat
+        )
+        window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+        window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
+        window.root.data_cat_dropdown.grid_remove()
+
+        #end date dropdown
+        window.root.end_date_dropdown = ttk.Combobox(window.root.tab_1, state="readonly"
+        )
+        window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
+        window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+        window.root.end_date_dropdown.grid_remove()
+
+
         # Output Text Label
         window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
         window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
@@ -285,6 +317,7 @@ class App(TKMT.ThemedTKinterFrame):
         )
         window.root.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
         window.root.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
+
 
         # Histogram End Date Dropdown
         window.root.histogram_end_date_dropdown = ttk.Combobox(
@@ -349,8 +382,6 @@ class App(TKMT.ThemedTKinterFrame):
     def setting_track(window):
         window.precision_slider()
         window.evaluate()
-        window.root.mode = "light"
-        window.root.tk.call("set_theme", "light")
         window.open = False
         window.root.settings_popup.destroy()
 
@@ -363,7 +394,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_popup.title("Settings")
         window.root.settings_popup.resizable(False, False)
         window.root.settings_popup.geometry("400x400")
-        window.root.settings_popup.iconbitmap("settings.ico")
+        window.root.settings_popup.iconbitmap("Icons/settings.ico")
 
         # Configure the grid
         window.root.settings_popup.grid_columnconfigure(0, weight=1)
@@ -382,7 +413,8 @@ class App(TKMT.ThemedTKinterFrame):
         settings_frame.grid(row=1, column=0, padx=20, pady=10, sticky="NSEW")
 
         # Create theme switch
-        theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var, command=window.update_theme)
+        theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var,
+                                           command=window.update_theme)
         theme_switch.grid(row=0, column=0, sticky="W", pady=10)
 
         # Create units switch
@@ -418,11 +450,17 @@ class App(TKMT.ThemedTKinterFrame):
             return window.precision_slider_stored
 
     def update_theme(window):
-        try:
-            window.theme = "dark" if window.theme_var else "light"
-            window.root.tk.call("set_theme", window.theme)
-        except:
-            window.root.tk.call("set_theme", window.theme)
+        window.theme = "dark" if window.theme_var.get() else "light"
+        window.root.tk.call("set_theme", window.theme)
+    #def update_theme(window):
+    #    try:
+    #        print(window.theme_var)
+    #        window.theme = "dark" if window.theme_var else "light"
+    #        print(window.theme)
+    #        window.root.tk.call("set_theme", window.theme)
+    #    except:
+    #        #print(window.theme)
+    #        window.root.tk.call("set_theme", window.theme)
 
     def lat_long_entry(window, event):
         """
@@ -449,76 +487,28 @@ class App(TKMT.ThemedTKinterFrame):
         window.evaluate()
 
     def data_test(window, event):
-        """
-        Handle changes when a new data type is selected.
-
-        This method checks if the selected data type is "Weather Code". If it is,
-        it hides the data category dropdown and end date dropdown (if they exist).
-        Otherwise, it shows the data category dropdown and binds a handler to it.
-
-        Args:
-            event (tk.Event, optional): The event that triggered this method.
-        """
-        # Check if the selected data type is "Weather Code"
-        if window.root.data_dropdown.get() == "Weather Code":
-            # Hide data category dropdown if it exists
+        data_type = window.root.data_dropdown.get()
+        category = window.root.data_cat_dropdown.get() if hasattr(window.root, 'data_cat_dropdown') else None
+        #if hasattr(window, 'end_date_dropdown'):
+        #window.root.end_date_dropdown.grid_remove()
+        # Always show start date dropdown
+        window.root.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
+        print(category)
+        if data_type == 'Weather Code':
             if hasattr(window, 'data_cat_dropdown'):
-                window.data_cat_dropdown.grid_remove()
-
-            # Hide end date dropdown if it exists
+                window.root.data_cat_dropown.grid_remove()
             if hasattr(window, 'end_date_dropdown'):
-                window.end_date_dropdown.grid_remove()
+                window.root.end_date_dropdown.grid_remove()
         else:
-            # If data type is not "Weather Code", show data category dropdown
-            if not hasattr(window, 'data_cat_dropdown'):
-                window.root.data_cat_dropdown = ttk.Combobox(
-                    window.root.tab_1, state="readonly", values=window.data_cat
-                )
-                window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
-                window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.handle_data_category_selection)
-                if window.root.data_dropdown.get() != "single" and not window.root.data_dropdown.get() == "Weather Code":
-                    window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
-                    window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
-                else:
-                    window.root.end_date_dropdown.grid_remove()
+            window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
+            window.root.end_date_dropdown.grid_remove()
+
+            if category != 'Single':
+                window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
             else:
-                window.root.data_cat_dropdown.grid()
-        window.handle_data_category_selection()
-        # Call the evaluate method to process the changes
-        window.evaluate()
+                window.root.end_date_dropdown.grid_remove()
 
-    def handle_data_category_selection(window, event=None):
-        """
-        Handle changes when a new data category is selected.
-
-        This method checks if the selected data category is 'Single'. If it is,
-        it hides the end date dropdown (if it exists). Otherwise, it shows the
-        end date dropdown and binds a handler to it.
-
-        Args:
-            event (tk.Event, optional): The event that triggered this method.
-        """
-        if hasattr(window.root, 'data_cat_dropdown'):
-        # Check if the selected data category is 'Single'
-            if window.root.data_cat_dropdown.get() == 'Single':
-                # Hide end date dropdown if it exists
-                if hasattr(window.root, 'end_date_dropdown'):
-                    window.root.end_date_dropdown.grid_remove()
-            else:
-                # Show end date dropdown if it does not exist
-                if not hasattr(window.root, 'end_date_dropdown'):
-                    window.root.end_date_dropdown = ttk.Combobox(
-                        window.root.tab_1, state="readonly"
-                    )
-                    window.root.end_date_dropdown['values'] = dates
-                    window.root.end_date_dropdown.current(1)
-                    window.root.start_date_dropdown.current(0)
-                    window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
-                    window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
-                else:
-                    window.root.end_date_dropdown.grid()
-
-            # Call the evaluate method to process the changes
+        window.root.end_date_dropdown['values'] = dates
         window.evaluate()
 
     def evaluate(window):
@@ -526,8 +516,7 @@ class App(TKMT.ThemedTKinterFrame):
         Sets the output text based on user-selected data category and type.
         """
         data_type = window.root.data_dropdown.get()
-        category = window.data_cat_dropdown.get() if hasattr(window, 'data_cat_dropdown') else None
-
+        category = window.root.data_cat_dropdown.get() if hasattr(window.root, 'data_cat_dropdown') else None
         if data_type == "Weather Code":
             window._handle_weather_code()
         elif category == "Single":
@@ -537,16 +526,28 @@ class App(TKMT.ThemedTKinterFrame):
 
     def units(window):
         data_type = window.root.data_dropdown.get()
-        if(data_type == "Weather Code"):
-            return
-        elif data_type == "Temp High" or data_type == "Temp Low":
-            return "F"
-        elif data_type == "Precipitation Amount":
-            return "inches"
-        elif data_type == "Wind Speed":
-            return "m/h"
-        elif data_type == "Precipitation Probability":
-            return "%"
+        if window.units_var.get():  # True for Imperial Units
+            if data_type == "Weather Code":
+                return
+            elif data_type == "Temp High" or data_type == "Temp Low":
+                return "°F"
+            elif data_type == "Precipitation Amount":
+                return "inches"
+            elif data_type == "Wind Speed":
+                return "mph"
+            elif data_type == "Precipitation Probability":
+                return "%"
+        else:  # Metric Units
+            if data_type == "Weather Code":
+                return
+            elif data_type == "Temp High" or data_type == "Temp Low":
+                return "°C"
+            elif data_type == "Precipitation Amount":
+                return "mm"
+            elif data_type == "Wind Speed":
+                return "km/h"
+            elif data_type == "Precipitation Probability":
+                return "%"
     def _handle_weather_code(window):
         selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
@@ -558,7 +559,6 @@ class App(TKMT.ThemedTKinterFrame):
                                f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
 
     def _handle_single_data(window, data_type):
-
         selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
@@ -789,9 +789,9 @@ class App(TKMT.ThemedTKinterFrame):
             "end_date": end_date,
             "daily": ["weather_code", "temperature_2m_max", "temperature_2m_min", "precipitation_sum",
                       "precipitation_probability_max", "wind_speed_10m_max"],
-            "temperature_unit": "fahrenheit",
-            "wind_speed_unit": "mph",
-            "precipitation_unit": "inch"
+            "temperature_unit": "fahrenheit" if window.units_var.get() else "celsius",
+            "wind_speed_unit": "mph" if window.units_var.get() else "kmh",
+            "precipitation_unit": "inch" if window.units_var.get() else "mm"
         }
 
     def _fetch_weather_data(window, client, params):
@@ -864,253 +864,239 @@ class App(TKMT.ThemedTKinterFrame):
         # window.quit()
         # window.destroy()
         # sys.exit(0000)
+def run_app():
+    app = App("Sun-valley", "light")
+    app.root.mainloop()
 
+    # REST API routes
+    @flask_app.route('/weather', methods=['GET'])
+    def get_weather():
+        """
+        Get weather data for a specified date range and data type.
 
-# REST API routes
-@flask_app.route('/weather', methods=['GET'])
-def get_weather():
+        This method retrieves weather data based on the provided start date, end date,
+        and data type. If any of the required parameters are missing or the date range
+        is invalid, it returns an error message.
+
+        Args:
+            None
+
+        Returns:
+            json: Weather data for the specified date range and data type, or an error message.
+        """
+        # Retrieve query parameters from the request
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        data_type = request.args.get('data_type')
+
+        # Check if any required parameters are missing
+        if not start_date or not end_date or not data_type:
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # Validate the date range
+        try:
+            start_index = dates.index(start_date)
+            end_index = dates.index(end_date) + 1
+        except ValueError:
+            return jsonify({"error": "Invalid date range"}), 400
+
+        # Map the data type to the corresponding data list
+        data = {
+            'Weather Code': weatherCode,
+            'Temp Low': temperatureMin,
+            'Temp High': temperatureMax,
+            'Precipitation Amount': precipitationSum,
+            'Wind Speed': windSpeedMax,
+            'Precipitation Probability': precipitationProbabilityMax
+        }.get(data_type)
+
+        # Check if the data type is valid
+        if not data:
+            return jsonify({"error": "Invalid data type"}), 400
+
+        # Generate the result dictionary for the specified date range
+        result = {dates[i]: data[i] for i in range(start_index, end_index)}
+        return jsonify(result)
+
+    @flask_app.route('/weather', methods=['POST'])
+    def add_weather():
+        """
+        Add new weather data.
+
+        This method adds new weather data to the existing lists. The new data must
+        include a date, and the date must not already exist in the data. If the
+        data format is invalid or the date already exists, it returns an error message.
+
+        Args:
+            None
+
+        Returns:
+            json: Success message or an error message.
+        """
+        # Retrieve the new data from the request body
+        new_data = request.json
+        if not new_data or 'date' not in new_data:
+            return jsonify({"error": "Invalid data format"}), 400
+
+        # Extract the date from the new data
+        date = new_data['date']
+        # Check if the date already exists
+        if date in dates:
+            return jsonify({"error": "Date already exists"}), 400
+
+        # Append the new data to the corresponding lists
+        dates.append(date)
+        weatherCode.append(str(new_data.get('weather_code', '')))
+        temperatureMax.append(str(new_data.get('temperature_max', '')))
+        temperatureMin.append(str(new_data.get('temperature_min', '')))
+        precipitationSum.append(str(new_data.get('precipitation_sum', '')))
+        windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
+        precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
+
+        app.update_api()
+        return jsonify({"message": "Data added successfully"}), 201
+
+    @flask_app.route('/weather', methods=['PUT'])
+    def update_weather():
+        """
+        Update existing weather data.
+
+        This method updates a specific data point for a given date. The request must
+        include the date, data point, and the new value. If the data format is invalid
+        or the date is not found, it returns an error message.
+
+        Args:
+            None
+
+        Returns:
+            json: Success message or an error message.
+        """
+        # Retrieve the update information from the request body
+        update_info = request.json
+        if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
+            return jsonify({"error": "Invalid update format"}), 400
+
+        # Extract the date, data point, and value from the update information
+        date = update_info['date']
+        data_point = update_info['data_point']
+        value = update_info['value']
+
+        # Check if the date exists
+        if date not in dates:
+            return jsonify({"error": "Date not found"}), 404
+
+        # Get the index of the date
+        index = dates.index(date)
+        # Update the corresponding data point
+        if data_point == 'Weather Code':
+            weatherCode[index] = str(value)
+        elif data_point == 'Temp Low':
+            temperatureMin[index] = str(value)
+        elif data_point == 'Temp High':
+            temperatureMax[index] = str(value)
+        elif data_point == 'Precipitation Amount':
+            precipitationSum[index] = str(value)
+        elif data_point == 'Wind Speed':
+            windSpeedMax[index] = str(value)
+        elif data_point == 'Precipitation Probability':
+            precipitationProbabilityMax[index] = str(value)
+        else:
+            return jsonify({"error": "Invalid data point"}), 400
+
+        app.update_api()
+        return jsonify({"message": "Data updated successfully"})
+
+    @flask_app.route('/weather', methods=['DELETE'])
+    def delete_weather():
+        """
+        Delete weather data for a specific date.
+
+        This method deletes weather data for a given date. The date must be provided
+        as a query parameter. If the date is not found, it returns an error message.
+
+        Args:
+            None
+
+        Returns:
+            json: Success message or an error message.
+        """
+        # Retrieve the date from the query parameters
+        date = request.args.get('date')
+        if not date:
+            return jsonify({"error": "Date parameter is required"}), 400
+
+        # Check if the date exists
+        if date not in dates:
+            return jsonify({"error": "Date not found"}), 404
+
+        # Get the index of the date
+        index = dates.index(date)
+        # Remove the data for the specified date
+        dates.pop(index)
+        weatherCode.pop(index)
+        temperatureMax.pop(index)
+        temperatureMin.pop(index)
+        precipitationSum.pop(index)
+        windSpeedMax.pop(index)
+        precipitationProbabilityMax.pop(index)
+
+        app.update_api()
+        return jsonify({"message": "Data deleted successfully"})
+
+    @flask_app.route('/')
+    def home():
+        """
+        Home route.
+
+        This method returns a simple message for the home route of the Flask app.
+
+        Args:
+            None
+
+        Returns:
+            str: A message indicating the landing page for the weather app.
+        """
+        return "this is the local host landing page for the weather app"
+
+    def run_flask():
+        """
+        Run the Flask app.
+
+        This method starts the Flask application with debugging enabled and without
+        the reloader.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        flask_app.run(debug=True, use_reloader=False)
+
+#if __name__ == "__main__":
     """
-    Get weather data for a specified date range and data type.
+    processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
-    This method retrieves weather data based on the provided start date, end date,
-    and data type. If any of the required parameters are missing or the date range
-    is invalid, it returns an error message.
+    #app = App("Sun-valley", "light")
+    flask_process = Process(target=restApi.run_flask()).start
 
-    Args:
-        None
+    # Start the Flask app in a separate thread
+    app_process = Process(target=run_app()).start
+    #app.root.mainloop()
+    #flask_process = Process(target=restApi.run_flask()).start
 
-    Returns:
-        json: Weather data for the specified date range and data type, or an error message.
+    #flask_thread.start()
     """
-    # Retrieve query parameters from the request
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-    data_type = request.args.get('data_type')
-
-    # Check if any required parameters are missing
-    if not start_date or not end_date or not data_type:
-        return jsonify({"error": "Missing required parameters"}), 400
-
-    # Validate the date range
-    try:
-        start_index = dates.index(start_date)
-        end_index = dates.index(end_date) + 1
-    except ValueError:
-        return jsonify({"error": "Invalid date range"}), 400
-
-    # Map the data type to the corresponding data list
-    data = {
-        'Weather Code': weatherCode,
-        'Temp Low': temperatureMin,
-        'Temp High': temperatureMax,
-        'Precipitation Amount': precipitationSum,
-        'Wind Speed': windSpeedMax,
-        'Precipitation Probability': precipitationProbabilityMax
-    }.get(data_type)
-
-    # Check if the data type is valid
-    if not data:
-        return jsonify({"error": "Invalid data type"}), 400
-
-    # Generate the result dictionary for the specified date range
-    result = {dates[i]: data[i] for i in range(start_index, end_index)}
-    return jsonify(result)
-
-
-@flask_app.route('/weather', methods=['POST'])
-def add_weather():
-    """
-    Add new weather data.
-
-    This method adds new weather data to the existing lists. The new data must
-    include a date, and the date must not already exist in the data. If the
-    data format is invalid or the date already exists, it returns an error message.
-
-    Args:
-        None
-
-    Returns:
-        json: Success message or an error message.
-    """
-    # Retrieve the new data from the request body
-    new_data = request.json
-    if not new_data or 'date' not in new_data:
-        return jsonify({"error": "Invalid data format"}), 400
-
-    # Extract the date from the new data
-    date = new_data['date']
-    # Check if the date already exists
-    if date in dates:
-        return jsonify({"error": "Date already exists"}), 400
-
-    # Append the new data to the corresponding lists
-    dates.append(date)
-    weatherCode.append(str(new_data.get('weather_code', '')))
-    temperatureMax.append(str(new_data.get('temperature_max', '')))
-    temperatureMin.append(str(new_data.get('temperature_min', '')))
-    precipitationSum.append(str(new_data.get('precipitation_sum', '')))
-    windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
-    precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
-
-    app.update_api()
-    return jsonify({"message": "Data added successfully"}), 201
-
-
-@flask_app.route('/weather', methods=['PUT'])
-def update_weather():
-    """
-    Update existing weather data.
-
-    This method updates a specific data point for a given date. The request must
-    include the date, data point, and the new value. If the data format is invalid
-    or the date is not found, it returns an error message.
-
-    Args:
-        None
-
-    Returns:
-        json: Success message or an error message.
-    """
-    # Retrieve the update information from the request body
-    update_info = request.json
-    if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
-        return jsonify({"error": "Invalid update format"}), 400
-
-    # Extract the date, data point, and value from the update information
-    date = update_info['date']
-    data_point = update_info['data_point']
-    value = update_info['value']
-
-    # Check if the date exists
-    if date not in dates:
-        return jsonify({"error": "Date not found"}), 404
-
-    # Get the index of the date
-    index = dates.index(date)
-    # Update the corresponding data point
-    if data_point == 'Weather Code':
-        weatherCode[index] = str(value)
-    elif data_point == 'Temp Low':
-        temperatureMin[index] = str(value)
-    elif data_point == 'Temp High':
-        temperatureMax[index] = str(value)
-    elif data_point == 'Precipitation Amount':
-        precipitationSum[index] = str(value)
-    elif data_point == 'Wind Speed':
-        windSpeedMax[index] = str(value)
-    elif data_point == 'Precipitation Probability':
-        precipitationProbabilityMax[index] = str(value)
-    else:
-        return jsonify({"error": "Invalid data point"}), 400
-
-    app.update_api()
-    return jsonify({"message": "Data updated successfully"})
-
-
-@flask_app.route('/weather', methods=['DELETE'])
-def delete_weather():
-    """
-    Delete weather data for a specific date.
-
-    This method deletes weather data for a given date. The date must be provided
-    as a query parameter. If the date is not found, it returns an error message.
-
-    Args:
-        None
-
-    Returns:
-        json: Success message or an error message.
-    """
-    # Retrieve the date from the query parameters
-    date = request.args.get('date')
-    if not date:
-        return jsonify({"error": "Date parameter is required"}), 400
-
-    # Check if the date exists
-    if date not in dates:
-        return jsonify({"error": "Date not found"}), 404
-
-    # Get the index of the date
-    index = dates.index(date)
-    # Remove the data for the specified date
-    dates.pop(index)
-    weatherCode.pop(index)
-    temperatureMax.pop(index)
-    temperatureMin.pop(index)
-    precipitationSum.pop(index)
-    windSpeedMax.pop(index)
-    precipitationProbabilityMax.pop(index)
-
-    app.update_api()
-    return jsonify({"message": "Data deleted successfully"})
-
-
-@flask_app.route('/')
-def home():
-    """
-    Home route.
-
-    This method returns a simple message for the home route of the Flask app.
-
-    Args:
-        None
-
-    Returns:
-        str: A message indicating the landing page for the weather app.
-    """
-    return "this is the local host landing page for the weather app"
-
-
-def run_flask():
-    """
-    Run the Flask app.
-
-    This method starts the Flask application with debugging enabled and without
-    the reloader.
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
-    flask_app.run(debug=True, use_reloader=False)
-
 
 if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
-    # Initialize the main window
-    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD")
-    # root = tk.Tk()
-    window.root.title("Weather App")
-    window.root.iconbitmap("cloud_icon.ico")
-
-    # Set the theme
-
-    # window.tk.call("source", "azure.tcl")
-    # window.tk.call("set_theme", "dark")
-
-    # Create and pack the main application frame
     app = App("Sun-valley", "light")
-    #app.pack(fill="both", expand=True)
-
-    # Update the window to calculate the minimum size
-    window.root.update_idletasks()
-    window.root.minsize(window.root.winfo_width(), window.root.winfo_height())
-
-    # Center the window on the screen
-    screen_width = window.root.winfo_screenwidth()
-    screen_height = window.root.winfo_screenheight()
-    window_width = window.root.winfo_width()
-    window_height = window.root.winfo_height()
-    x_cordinate = (screen_width // 2) - (window_width // 2)
-    y_cordinate = (screen_height // 2) - (window_height // 2) - 20
-    window.root.geometry(f"{window_width}x{window_height}+{x_cordinate}+{y_cordinate}")
 
     # Start the Flask app in a separate thread
-    flask_thread = threading.Thread(target=run_flask)
+    flask_thread = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
     flask_thread.start()
 
-    # Start the Tkinter main loop
-    window.root.mainloop()
+    print("Escaped FLASK")
+
+    app.root.mainloop()
