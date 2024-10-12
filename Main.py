@@ -17,6 +17,7 @@ from tkinter.ttk import Checkbutton
 
 import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
+from click import command
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import openmeteo_requests
 import requests_cache
@@ -39,7 +40,7 @@ precipitationProbabilityMax = []
 
 
 
-class App(ttk.Frame):
+class App(TKMT.ThemedTKinterFrame):
     # lookup table for weather code
     codes = ['Cloud development not observed or not observable during the past hour',
              'Clouds generally dissolving or becoming less developed during the past hour',
@@ -147,11 +148,12 @@ class App(ttk.Frame):
     latitude_set = 0
     longitude_set = 0
 
+    def __init__(window, theme, mode, usecommandlineargs=True, usethemeconfigfile=True):
+        super().__init__("WeatherAPPKUHSD", theme, mode, usecommandlineargs=usecommandlineargs, useconfigfile=usethemeconfigfile)
 
-
-    def __init__(window, parent, usecommandlineargs=True, usethemeconfigfile=True):
-        ttk.Frame.__init__(window)
         window.open = False
+        window.theme = theme
+
         """
         Initialize the frame with given parent widget.
 
@@ -164,8 +166,8 @@ class App(ttk.Frame):
 
         # Make the app responsive
         for index in [0, 1, 2]:
-            window.columnconfigure(index=index, weight=1)
-            window.rowconfigure(index=index, weight=1)
+            window.root.columnconfigure(index=index, weight=1)
+            window.root.rowconfigure(index=index, weight=1)
 
         # Create lists of data types and categories
         window.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
@@ -188,123 +190,123 @@ class App(ttk.Frame):
         """
 
         # Header frame for upload and close buttons
-        window.header_frame = ttk.Frame(window, padding=(20, 10))
-        window.header_frame.grid(row=0, column=0, sticky="EW")
+        window.root.header_frame = ttk.Frame(window.root, padding=(20, 10))
+        window.root.header_frame.grid(row=0, column=0, sticky="EW")
 
         # Upload Button
-        window.upload_button = ttk.Button(window.header_frame, text="Upload Input File", command=window.upload_file)
-        window.upload_button.grid(row=0, column=0, padx=5, pady=5)
+        window.root.upload_button = ttk.Button(window.root.header_frame, text="Upload Input File", command=window.upload_file)
+        window.root.upload_button.grid(row=0, column=0, padx=5, pady=5)
 
         # Close Button
-        window.close_button = ttk.Button(window.header_frame, text="Close", command=window.quitapp)
-        window.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
+        window.root.close_button = ttk.Button(window.root.header_frame, text="Close", command=window.quitapp)
+        window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
 
         # Body frame for notebook
-        window.body_frame = ttk.Frame(window)
-        window.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.body_frame = ttk.Frame(window.root)
+        window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
 
         #Settings button
-        window.settings_button = ttk.Button(window.header_frame, text="Settings", command=window.settings_window)
-        window.settings_button.grid(row=0, column=1, padx=5, pady=5)
+        window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings", command=window.settings_window)
+        window.root.settings_button.grid(row=0, column=1, padx=5, pady=5)
 
         # Notebook widget for tabs
-        window.notebook = ttk.Notebook(window.body_frame)
-        window.notebook.pack(fill="both", expand=True)
+        window.root.notebook = ttk.Notebook(window.root.body_frame)
+        window.root.notebook.pack(fill="both", expand=True)
 
         # Tab #1: Data Output
-        window.tab_1 = ttk.Frame(window.notebook)
-        window.notebook.add(window.tab_1, text="Data Output")
+        window.root.tab_1 = ttk.Frame(window.root.notebook)
+        window.root.notebook.add(window.root.tab_1, text="Data Output")
 
         # Statistics frame within Tab #1
-        window.weather_code_frame = ttk.LabelFrame(window.tab_1, text="Statistics", padding=(20, 10))
-        window.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
+        window.root.weather_code_frame = ttk.LabelFrame(window.root.tab_1, text="Statistics", padding=(20, 10))
+        window.root.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
         # Start Date Dropdown
-        window.start_date_dropdown = ttk.Combobox(window.tab_1, state="readonly", values=dates)
-        window.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
-        window.start_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+        window.root.start_date_dropdown = ttk.Combobox(window.root.tab_1, state="readonly", values=dates)
+        window.root.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
+        window.root.start_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
         # Data Type Dropdown
-        window.data_dropdown = ttk.Combobox(window.tab_1, state="readonly", values=window.data_type_list_complete, )
-        window.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
-        window.data_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+        window.root.data_dropdown = ttk.Combobox(window.root.tab_1, state="readonly", values=window.data_type_list_complete, )
+        window.root.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
+        window.root.data_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
         # Output Text Label
-        window.output_text = ttk.Label(window.weather_code_frame, text='', wraplength=675)
-        window.output_text.grid(row=0, column=0, padx=5, pady=5)
+        window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
+        window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude and Longitude Entry Fields
-        window.lat = ttk.Entry(window.tab_1, width=30,)
-        window.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        window.lat.bind('<0>', window.lat_long_entry)
-        window.lat.bind('<1>', window.lat_long_entry, add="+")
-        window.lat.bind('<2>', window.lat_long_entry, add="+")
-        window.lat.bind('<3>', window.lat_long_entry, add="+")
-        window.lat.bind('<4>', window.lat_long_entry, add="+")
-        window.lat.bind('<5>', window.lat_long_entry, add="+")
-        window.lat.bind('<6>', window.lat_long_entry, add="+")
-        window.lat.bind('<7>', window.lat_long_entry, add="+")
-        window.lat.bind('<8>', window.lat_long_entry, add="+")
-        window.lat.bind('<9>', window.lat_long_entry, add="+")
+        window.root.lat = ttk.Entry(window.root.tab_1, width=30,)
+        window.root.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        window.root.lat.bind('<0>', window.lat_long_entry)
+        window.root.lat.bind('<1>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<2>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<3>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<4>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<5>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<6>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<7>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<8>', window.lat_long_entry, add="+")
+        window.root.lat.bind('<9>', window.lat_long_entry, add="+")
 
 
 
-        window.long = ttk.Entry(window.tab_1, width=30)
-        window.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
-        window.long.bind('<0>', window.lat_long_entry)
-        window.long.bind('<1>', window.lat_long_entry, add="+")
-        window.long.bind('<2>', window.lat_long_entry, add="+")
-        window.long.bind('<3>', window.lat_long_entry, add="+")
-        window.long.bind('<4>', window.lat_long_entry, add="+")
-        window.long.bind('<5>', window.lat_long_entry, add="+")
-        window.long.bind('<6>', window.lat_long_entry, add="+")
-        window.long.bind('<7>', window.lat_long_entry, add="+")
-        window.long.bind('<8>', window.lat_long_entry, add="+")
-        window.long.bind('<9>', window.lat_long_entry, add="+")
+        window.root.long = ttk.Entry(window.root.tab_1, width=30)
+        window.root.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
+        window.root.long.bind('<0>', window.lat_long_entry)
+        window.root.long.bind('<1>', window.lat_long_entry, add="+")
+        window.root.long.bind('<2>', window.lat_long_entry, add="+")
+        window.root.long.bind('<3>', window.lat_long_entry, add="+")
+        window.root.long.bind('<4>', window.lat_long_entry, add="+")
+        window.root.long.bind('<5>', window.lat_long_entry, add="+")
+        window.root.long.bind('<6>', window.lat_long_entry, add="+")
+        window.root.long.bind('<7>', window.lat_long_entry, add="+")
+        window.root.long.bind('<8>', window.lat_long_entry, add="+")
+        window.root.long.bind('<9>', window.lat_long_entry, add="+")
 
         # Tab #2: Histogram
-        window.tab_2 = ttk.Frame(window.notebook)
-        window.notebook.add(window.tab_2, text="Histogram")
+        window.root.tab_2 = ttk.Frame(window.root.notebook)
+        window.root.notebook.add(window.root.tab_2, text="Histogram")
 
         # Histogram frame within Tab #2
-        window.histogram_frame = ttk.LabelFrame(window.tab_2, text="Histogram")
-        window.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.histogram_frame = ttk.LabelFrame(window.root.tab_2, text="Histogram")
+        window.root.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
 
         # Histogram Data Type Dropdown
-        window.histogram_data_type_dropdown = ttk.Combobox(
-            window.histogram_frame, state="readonly", values=window.data_type_list
+        window.root.histogram_data_type_dropdown = ttk.Combobox(
+            window.root.histogram_frame, state="readonly", values=window.data_type_list
         )
-        window.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
-        window.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
+        window.root.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
+        window.root.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Histogram Start Date Dropdown
-        window.histogram_start_date_dropdown = ttk.Combobox(
-            window.histogram_frame, state="readonly", values=dates
+        window.root.histogram_start_date_dropdown = ttk.Combobox(
+            window.root.histogram_frame, state="readonly", values=dates
         )
-        window.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
-        window.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
+        window.root.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
+        window.root.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Histogram End Date Dropdown
-        window.histogram_end_date_dropdown = ttk.Combobox(
-            window.histogram_frame, state="readonly", values=dates
+        window.root.histogram_end_date_dropdown = ttk.Combobox(
+            window.root.histogram_frame, state="readonly", values=dates
         )
-        window.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
-        window.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
+        window.root.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
+        window.root.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Canvas for Histogram
-        window.canvas = None
+        window.root.canvas = None
 
         # Tab #3: Credits
-        window.tab_3 = ttk.Frame(window.notebook)
-        window.notebook.add(window.tab_3, text="Credits")
+        window.root.tab_3 = ttk.Frame(window.root.notebook)
+        window.root.notebook.add(window.root.tab_3, text="Credits")
 
         # Credits frame within Tab #3
-        window.credits = ttk.LabelFrame(window.tab_3, text="Credits", padding=(20, 10))
-        window.credits.grid(row=0, column=0, padx=10, pady=10)
+        window.root.credits = ttk.LabelFrame(window.root.tab_3, text="Credits", padding=(20, 10))
+        window.root.credits.grid(row=0, column=0, padx=10, pady=10)
 
         # Credits Text Box
-        window.credits_textbox = tk.Text(window.credits, wrap='word', height=30, width=90)
-        window.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
+        window.root.credits_textbox = tk.Text(window.root.credits, wrap='word', height=30, width=90)
+        window.root.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
 
         # Inserting Credits Information
         credits_text = (
@@ -320,12 +322,12 @@ class App(ttk.Frame):
             "- requests - A simple, yet elegant HTTP library.\n"
             "- Azure-ttk-theme - A modern theme for the Tkinter/ttk widgets."
         )
-        window.credits_textbox.insert('1.0', credits_text)
-        window.credits_textbox.config(state='disabled')  # Make the text box read-only
+        window.root.credits_textbox.insert('1.0', credits_text)
+        window.root.credits_textbox.config(state='disabled')  # Make the text box read-only
 
         # Configure grid weight to allow the text box to expand
-        window.credits.grid_rowconfigure(0, weight=1)
-        window.credits.grid_columnconfigure(0, weight=1)
+        window.root.credits.grid_rowconfigure(0, weight=1)
+        window.root.credits.grid_columnconfigure(0, weight=1)
 
     class ToggleSwitch(ttk.Checkbutton):
         def __init__(self, master, text, variable, command=None, **kwargs):
@@ -347,38 +349,40 @@ class App(ttk.Frame):
     def setting_track(window):
         window.precision_slider()
         window.evaluate()
+        window.root.mode = "light"
+        window.root.tk.call("set_theme", "light")
         window.open = False
-        window.settings_popup.destroy()
+        window.root.settings_popup.destroy()
 
     def settings_window(window):
         if window.open:
             return
         window.open = True
 
-        window.settings_popup = tk.Toplevel(window)
-        window.settings_popup.title("Settings")
-        window.settings_popup.resizable(False, False)
-        window.settings_popup.geometry("400x400")
-        window.settings_popup.iconbitmap("settings.ico")
+        window.root.settings_popup = tk.Toplevel(window.root)
+        window.root.settings_popup.title("Settings")
+        window.root.settings_popup.resizable(False, False)
+        window.root.settings_popup.geometry("400x400")
+        window.root.settings_popup.iconbitmap("settings.ico")
 
         # Configure the grid
-        window.settings_popup.grid_columnconfigure(0, weight=1)
-        window.settings_popup.grid_rowconfigure(1, weight=1)
+        window.root.settings_popup.grid_columnconfigure(0, weight=1)
+        window.root.settings_popup.grid_rowconfigure(1, weight=1)
 
         # Create and configure the title style
         title_style = ttk.Style()
         title_style.configure("Title.TLabel", font=("TkDefaultFont", 16, "bold"))
 
         # Create the title label
-        settings_title = ttk.Label(window.settings_popup, text="Settings", style="Title.TLabel")
+        settings_title = ttk.Label(window.root.settings_popup, text="Settings", style="Title.TLabel")
         settings_title.grid(row=0, column=0, padx=10, pady=10, sticky="N")
 
         # Create the settings frame
-        settings_frame = ttk.Frame(window.settings_popup)
+        settings_frame = ttk.Frame(window.root.settings_popup)
         settings_frame.grid(row=1, column=0, padx=20, pady=10, sticky="NSEW")
 
         # Create theme switch
-        theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var)
+        theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var, command=window.update_theme)
         theme_switch.grid(row=0, column=0, sticky="W", pady=10)
 
         # Create units switch
@@ -394,27 +398,32 @@ class App(ttk.Frame):
 
         Precision_label = ttk.Label(settings_frame, text="Precision")
         Precision_label.grid(row=5, column=0, padx=10, pady=10, sticky="NW")
-        window.Precision_slider = ttk.Scale(settings_frame, value=window.precision_slider_stored, from_=0, to=4, orient='horizontal')
-        window.Precision_slider.grid(row=5, column=1, padx=10, pady=10, sticky="NSEW")
+        window.root.Precision_slider = ttk.Scale(settings_frame, value=window.precision_slider_stored, from_=0, to=4, orient='horizontal')
+        window.root.Precision_slider.grid(row=5, column=1, padx=10, pady=10, sticky="NSEW")
 
         # Create the close button
-        window.close_settings_button = ttk.Button(
-            window.settings_popup,
+        window.root.close_settings_button = ttk.Button(
+            window.root.settings_popup,
             text="Close",
             command=lambda: window.setting_track()  # Use lambda to call setting_track when button is clicked
         )
-        window.close_settings_button.grid(row=6, column=0, padx=10, pady=10, sticky="SE")
+        window.root.close_settings_button.grid(row=6, column=0, padx=10, pady=10, sticky="SE")
 
     def precision_slider(window):
 
         try:
-            window.precision_slider_stored = int(window.Precision_slider.get())
+            window.precision_slider_stored = int(window.root.Precision_slider.get())
             return window.precision_slider_stored
         except:
             return window.precision_slider_stored
 
-    def curr_theme(window):
-        return "Dark" if window.theme_var else "Light"
+    def update_theme(window):
+        try:
+            window.theme = "dark" if window.theme_var else "light"
+            window.root.tk.call("set_theme", window.theme)
+        except:
+            window.root.tk.call("set_theme", window.theme)
+
     def lat_long_entry(window, event):
         """
         Process latitude and longitude values entered by the user.
@@ -426,15 +435,15 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Get the latitude and longitude values from the Entry widgets
-        if window.lat.get() == '':
+        if window.root.lat.get() == '':
             window.latitude_set = 0
         else:
-            window.latitude_set = float(window.lat.get())
+            window.latitude_set = float(window.root.lat.get())
 
-        if window.long.get() == '':
+        if window.root.long.get() == '':
             window.longitude_set = 0
         else:
-            window.longitude_set = float(window.long.get())
+            window.longitude_set = float(window.root.long.get())
 
         # Call the evaluate method to process the latitude and longitude values
         window.evaluate()
@@ -451,7 +460,7 @@ class App(ttk.Frame):
             event (tk.Event, optional): The event that triggered this method.
         """
         # Check if the selected data type is "Weather Code"
-        if window.data_dropdown.get() == "Weather Code":
+        if window.root.data_dropdown.get() == "Weather Code":
             # Hide data category dropdown if it exists
             if hasattr(window, 'data_cat_dropdown'):
                 window.data_cat_dropdown.grid_remove()
@@ -462,18 +471,18 @@ class App(ttk.Frame):
         else:
             # If data type is not "Weather Code", show data category dropdown
             if not hasattr(window, 'data_cat_dropdown'):
-                window.data_cat_dropdown = ttk.Combobox(
-                    window.tab_1, state="readonly", values=window.data_cat
+                window.root.data_cat_dropdown = ttk.Combobox(
+                    window.root.tab_1, state="readonly", values=window.data_cat
                 )
-                window.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
-                window.data_cat_dropdown.bind("<<ComboboxSelected>>", window.handle_data_category_selection)
-                if window.data_dropdown.get() != "single" and not window.data_dropdown.get() == "Weather Code":
-                    window.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
-                    window.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+                window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
+                window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.handle_data_category_selection)
+                if window.root.data_dropdown.get() != "single" and not window.root.data_dropdown.get() == "Weather Code":
+                    window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
+                    window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
                 else:
-                    window.end_date_dropdown.grid_remove()
+                    window.root.end_date_dropdown.grid_remove()
             else:
-                window.data_cat_dropdown.grid()
+                window.root.data_cat_dropdown.grid()
         window.handle_data_category_selection()
         # Call the evaluate method to process the changes
         window.evaluate()
@@ -489,25 +498,25 @@ class App(ttk.Frame):
         Args:
             event (tk.Event, optional): The event that triggered this method.
         """
-        if hasattr(window, 'data_cat_dropdown'):
+        if hasattr(window.root, 'data_cat_dropdown'):
         # Check if the selected data category is 'Single'
-            if window.data_cat_dropdown.get() == 'Single':
+            if window.root.data_cat_dropdown.get() == 'Single':
                 # Hide end date dropdown if it exists
-                if hasattr(window, 'end_date_dropdown'):
-                    window.end_date_dropdown.grid_remove()
+                if hasattr(window.root, 'end_date_dropdown'):
+                    window.root.end_date_dropdown.grid_remove()
             else:
                 # Show end date dropdown if it does not exist
-                if not hasattr(window, 'end_date_dropdown'):
-                    window.end_date_dropdown = ttk.Combobox(
-                        window.tab_1, state="readonly"
+                if not hasattr(window.root, 'end_date_dropdown'):
+                    window.root.end_date_dropdown = ttk.Combobox(
+                        window.root.tab_1, state="readonly"
                     )
-                    window.end_date_dropdown['values'] = dates
-                    window.end_date_dropdown.current(1)
-                    window.start_date_dropdown.current(0)
-                    window.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
-                    window.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
+                    window.root.end_date_dropdown['values'] = dates
+                    window.root.end_date_dropdown.current(1)
+                    window.root.start_date_dropdown.current(0)
+                    window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
+                    window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
                 else:
-                    window.end_date_dropdown.grid()
+                    window.root.end_date_dropdown.grid()
 
             # Call the evaluate method to process the changes
         window.evaluate()
@@ -516,7 +525,7 @@ class App(ttk.Frame):
         """
         Sets the output text based on user-selected data category and type.
         """
-        data_type = window.data_dropdown.get()
+        data_type = window.root.data_dropdown.get()
         category = window.data_cat_dropdown.get() if hasattr(window, 'data_cat_dropdown') else None
 
         if data_type == "Weather Code":
@@ -527,7 +536,7 @@ class App(ttk.Frame):
             window._handle_aggregate_data(data_type, category)
 
     def units(window):
-        data_type = window.data_dropdown.get()
+        data_type = window.root.data_dropdown.get()
         if(data_type == "Weather Code"):
             return
         elif data_type == "Temp High" or data_type == "Temp Low":
@@ -539,7 +548,7 @@ class App(ttk.Frame):
         elif data_type == "Precipitation Probability":
             return "%"
     def _handle_weather_code(window):
-        selected_date = window.start_date_dropdown.get()
+        selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
             weather_code = int(float(weatherCode[index]))
@@ -550,7 +559,7 @@ class App(ttk.Frame):
 
     def _handle_single_data(window, data_type):
 
-        selected_date = window.start_date_dropdown.get()
+        selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
             real_data = window.openMeteoSetup(index, index, data_type, window.latitude_set, window.longitude_set)
@@ -558,8 +567,8 @@ class App(ttk.Frame):
             window._set_output(f"Input {data_type}: {(float(input_data)):.{window.precision_slider()}f} {window.units()}\n\nReal {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}")
 
     def _handle_aggregate_data(window, data_type, category):
-        start_date = dates.index(window.start_date_dropdown.get())
-        end_date = dates.index(window.end_date_dropdown.get())
+        start_date = dates.index(window.root.start_date_dropdown.get())
+        end_date = dates.index(window.root.end_date_dropdown.get())
         input_data = window._calculate_aggregate(window._get_input_data_list(data_type), start_date, end_date, category)
         real_data = window._calculate_aggregate(
             window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set),
@@ -598,7 +607,7 @@ class App(ttk.Frame):
             return min(values)
 
     def _set_output(window, text):
-        window.output_text.config(text=text, font=("Arial", 20))
+        window.root.output_text.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
         """
@@ -652,10 +661,10 @@ class App(ttk.Frame):
         print("Max Wind Speed: ", windSpeedMax + "mph")
         print("Precipitation Probability Max: ", precipitationProbabilityMax + "%")
 
-        window.histogram_start_date_dropdown['values'] = dates
-        window.histogram_end_date_dropdown['values'] = dates
-        window.start_date_dropdown['values'] = dates
-        window.end_date_dropdown['values'] = dates
+        window.root.histogram_start_date_dropdown['values'] = dates
+        window.root.histogram_end_date_dropdown['values'] = dates
+        window.root.start_date_dropdown['values'] = dates
+        window.root.end_date_dropdown['values'] = dates
 
     def update_api(window):
         """
@@ -664,8 +673,8 @@ class App(ttk.Frame):
             Args: None
 
         """
-        window.start_date_dropdown['values'] = dates
-        window.end_date_dropdown['values'] = dates
+        window.root.start_date_dropdown['values'] = dates
+        window.root.end_date_dropdown['values'] = dates
 
     # Uploads file
     def upload_file(window):
@@ -706,9 +715,9 @@ class App(ttk.Frame):
         Clears previous plot if it exists and updates the canvas with the new histogram.
 
         """
-        data_type = window.histogram_data_type_dropdown.get()
-        start_date = window.histogram_start_date_dropdown.get()
-        end_date = window.histogram_end_date_dropdown.get()
+        data_type = window.root.histogram_data_type_dropdown.get()
+        start_date = window.root.histogram_start_date_dropdown.get()
+        end_date = window.root.histogram_end_date_dropdown.get()
 
         if data_type and start_date and end_date:
             start_index = dates.index(start_date)
@@ -746,10 +755,10 @@ class App(ttk.Frame):
                 fig.tight_layout()
 
                 # Clear previous plot
-                if window.canvas:
-                    window.canvas.get_tk_widget().destroy()
+                if window.root.canvas:
+                    window.root.canvas.get_tk_widget().destroy()
 
-                window.canvas = FigureCanvasTkAgg(fig, master=window.histogram_frame)
+                window.canvas = FigureCanvasTkAgg(fig, master=window.root.histogram_frame)
                 window.canvas.draw()
                 window.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
@@ -837,9 +846,9 @@ class App(ttk.Frame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
-        window.histogram_start_date_dropdown['values'] = dates
-        window.histogram_end_date_dropdown['values'] = dates
-        window.start_date_dropdown['values'] = dates
+        window.root.histogram_start_date_dropdown['values'] = dates
+        window.root.histogram_end_date_dropdown['values'] = dates
+        window.root.start_date_dropdown['values'] = dates
         if hasattr(window, 'end_date_dropdown'):
             window.end_date_dropdown['values'] = dates
 
@@ -1072,7 +1081,7 @@ if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
     # Initialize the main window
-    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD", "Sun-valley", "dark")
+    window = TKMT.ThemedTKinterFrame("WeatherAPPKUHSD")
     # root = tk.Tk()
     window.root.title("Weather App")
     window.root.iconbitmap("cloud_icon.ico")
@@ -1083,8 +1092,8 @@ if __name__ == "__main__":
     # window.tk.call("set_theme", "dark")
 
     # Create and pack the main application frame
-    app = App(window.root)
-    app.pack(fill="both", expand=True)
+    app = App("Sun-valley", "light")
+    #app.pack(fill="both", expand=True)
 
     # Update the window to calculate the minimum size
     window.root.update_idletasks()
