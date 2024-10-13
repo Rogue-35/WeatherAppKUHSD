@@ -170,6 +170,8 @@ class App(TKMT.ThemedTKinterFrame):
         window.open = False
         window.theme = theme
 
+        window.root.iconbitmap("Icons/cloud_icon.ico")
+
         """
         Initialize the frame with given parent widget.
 
@@ -219,7 +221,6 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Body frame for notebook
         window.root.body_frame = ttk.Frame(window.root)
-        window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
 
         #Settings button
         window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings", command=window.settings_window)
@@ -227,7 +228,6 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Notebook widget for tabs
         window.root.notebook = ttk.Notebook(window.root.body_frame)
-        window.root.notebook.pack(fill="both", expand=True)
 
         # Tab #1: Data Output
         window.root.tab_1 = ttk.Frame(window.root.notebook)
@@ -422,11 +422,12 @@ class App(TKMT.ThemedTKinterFrame):
         units_switch.grid(row=1, column=0, sticky="W", pady=10)
 
         # Create other settings widgets
-        styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
-        styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
-        styles = "Sun-valley", "Park", "Azure"
-        Style_dropdown = ttk.Combobox(settings_frame, state="readonly", values=styles)
-        Style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
+        window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
+        window.root.styles = "Sun-valley", "Park", "Azure"
+        window.root.style_dropdown = ttk.Combobox(settings_frame, state="readonly", values=window.root.styles)
+        window.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
+        window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
 
         Precision_label = ttk.Label(settings_frame, text="Precision")
         Precision_label.grid(row=5, column=0, padx=10, pady=10, sticky="NW")
@@ -452,15 +453,11 @@ class App(TKMT.ThemedTKinterFrame):
     def update_theme(window):
         window.theme = "dark" if window.theme_var.get() else "light"
         window.root.tk.call("set_theme", window.theme)
-    #def update_theme(window):
-    #    try:
-    #        print(window.theme_var)
-    #        window.theme = "dark" if window.theme_var else "light"
-    #        print(window.theme)
-    #        window.root.tk.call("set_theme", window.theme)
-    #    except:
-    #        #print(window.theme)
-    #        window.root.tk.call("set_theme", window.theme)
+
+    def update_styles(window):
+        window.mode = window.root.style_dropdown.get()
+
+        window.root.tk.call("set_theme", window.mode)
 
     def lat_long_entry(window, event):
         """
@@ -515,14 +512,15 @@ class App(TKMT.ThemedTKinterFrame):
         """
         Sets the output text based on user-selected data category and type.
         """
+        window.convert_units()
         data_type = window.root.data_dropdown.get()
         category = window.root.data_cat_dropdown.get() if hasattr(window.root, 'data_cat_dropdown') else None
         if data_type == "Weather Code":
-            window._handle_weather_code()
+            window.handle_weather_code()
         elif category == "Single":
-            window._handle_single_data(data_type)
+            window.handle_single_data(data_type)
         elif category in ["Mean", "Max", "Min"]:
-            window._handle_aggregate_data(data_type, category)
+            window.handle_aggregate_data(data_type, category)
 
     def units(window):
         data_type = window.root.data_dropdown.get()
@@ -548,36 +546,95 @@ class App(TKMT.ThemedTKinterFrame):
                 return "km/h"
             elif data_type == "Precipitation Probability":
                 return "%"
-    def _handle_weather_code(window):
+    
+    def histogram_units(window):
+        data_type = window.root.histogram_data_type_dropdown.get()
+        if window.units_var.get():  # True for Imperial Units
+            if data_type == "Temp High" or data_type == "Temp Low":
+                return "°F"
+            elif data_type == "Precipitation Amount":
+                return "inches"
+            elif data_type == "Wind Speed":
+                return "mph"
+            elif data_type == "Precipitation Probability":
+                return "%"
+        else:  # Metric Units
+            if data_type == "Temp High" or data_type == "Temp Low":
+                return "°C"
+            elif data_type == "Precipitation Amount":
+                return "mm"
+            elif data_type == "Wind Speed":
+                return "km/h"
+            elif data_type == "Precipitation Probability":
+                return "%"
+    
+    last_unit_type = True
+    def convert_units(window):
+        unit_type = window.units_var.get()
+
+        print(unit_type)
+        print(window.last_unit_type)
+        if unit_type == window.last_unit_type:
+            return  # No conversion needed if the unit type hasn't changed
+
+        if not unit_type:  # Imperial to Metric conversion
+            for i in range(len(dates)):
+                # Convert temperature from Fahrenheit to Celsius
+                temperatureMax[i] = (float(temperatureMax[i]) - 32) * 5 / 9
+                temperatureMin[i] = (float(temperatureMin[i]) - 32) * 5 / 9
+
+                # Convert precipitation from inches to millimeters
+                precipitationSum[i] = float(precipitationSum[i])*25.4
+
+                # Convert wind speed from miles per hour to kilometers per hour
+                windSpeedMax[i] = float(windSpeedMax[i])*1.60934
+                window.last_unit_type = False
+        else:  # Metric to Imperial conversion
+            for i in range(len(dates)):
+                # Convert temperature from Celsius to Fahrenheit
+                temperatureMax[i] = (float(temperatureMax[i]) * 9 / 5) + 32
+                temperatureMin[i] = (float(temperatureMin[i]) * 9 / 5) + 32
+
+                # Convert precipitation from millimeters to inches
+                precipitationSum[i] = float(precipitationSum[i])/25.4
+
+                # Convert wind speed from kilometers per hour to miles per hour
+                windSpeedMax[i] = float(windSpeedMax[i])/1.60934
+                window.last_unit_type = True
+
+        #last_unit_type = unit_type
+
+
+    def handle_weather_code(window):
         selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
             weather_code = int(float(weatherCode[index]))
             weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
                                                       window.longitude_set)
-            window._set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
-                               f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
+            window.set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
+                              f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
 
-    def _handle_single_data(window, data_type):
+    def handle_single_data(window, data_type):
         selected_date = window.root.start_date_dropdown.get()
         if selected_date in dates:
             index = dates.index(selected_date)
             real_data = window.openMeteoSetup(index, index, data_type, window.latitude_set, window.longitude_set)
-            input_data = window._get_input_data(data_type, index)
-            window._set_output(f"Input {data_type}: {(float(input_data)):.{window.precision_slider()}f} {window.units()}\n\nReal {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}")
+            input_data = window.get_input_data(data_type, index)
+            window.set_output(
+                f"Input {data_type}: {(float(input_data)):.{window.precision_slider()}f} {window.units()}\n\nReal {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}")
 
-    def _handle_aggregate_data(window, data_type, category):
+    def handle_aggregate_data(window, data_type, category):
         start_date = dates.index(window.root.start_date_dropdown.get())
         end_date = dates.index(window.root.end_date_dropdown.get())
-        input_data = window._calculate_aggregate(window._get_input_data_list(data_type), start_date, end_date, category)
-        real_data = window._calculate_aggregate(
-            window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set),
-            0, end_date - start_date, category
-        )
-        window._set_output(
+        input_data = window.calculate_aggregate(window.get_input_data_list(data_type), start_date, end_date, category)
+        real_data = window.calculate_aggregate(
+            window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set), 0,
+            end_date - start_date, category)
+        window.set_output(
             f"{category} Input {data_type}: {input_data:.{window.precision_slider()}f} {window.units()}\n\n{category} Real {data_type}: {real_data:.{window.precision_slider()}f} {window.units()}")
 
-    def _get_input_data(window, data_type, index):
+    def get_input_data(window, data_type, index):
         data_mapping = {
             "Temp Low": (temperatureMin),
             "Temp High": (temperatureMax),
@@ -588,7 +645,7 @@ class App(TKMT.ThemedTKinterFrame):
         data_list = data_mapping[data_type]
         return f"{(data_list[index])}"
 
-    def _get_input_data_list(window, data_type):
+    def get_input_data_list(window, data_type):
         return {
             "Temp Low": temperatureMin,
             "Temp High": temperatureMax,
@@ -597,7 +654,7 @@ class App(TKMT.ThemedTKinterFrame):
             "Precipitation Probability": precipitationProbabilityMax
         }[data_type]
 
-    def _calculate_aggregate(window, data_list, start, end, category):
+    def calculate_aggregate(window, data_list, start, end, category):
         values = [float(temp) for temp in data_list[start:end + 1]]
         if category == "Mean":
             return sum(values) / len(values)
@@ -606,7 +663,7 @@ class App(TKMT.ThemedTKinterFrame):
         elif category == "Min":
             return min(values)
 
-    def _set_output(window, text):
+    def set_output(window, text):
         window.root.output_text.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
@@ -701,6 +758,10 @@ class App(TKMT.ThemedTKinterFrame):
             except FileNotFoundError:
                 messagebox.showerror(title='Error', message='File Read Error')
 
+        window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
+        window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.notebook.pack(fill="both", expand=True)
+
     def plot_histogram(window, event):
         """
         Plot a histogram based on selected data type and date range.
@@ -718,7 +779,7 @@ class App(TKMT.ThemedTKinterFrame):
         data_type = window.root.histogram_data_type_dropdown.get()
         start_date = window.root.histogram_start_date_dropdown.get()
         end_date = window.root.histogram_end_date_dropdown.get()
-
+        window.convert_units()
         if data_type and start_date and end_date:
             start_index = dates.index(start_date)
             end_index = dates.index(end_date) + 1
@@ -739,7 +800,7 @@ class App(TKMT.ThemedTKinterFrame):
                 ax.plot(dates[start_index:end_index], data, marker="D")
                 ax.set_title(f'{data_type} over Time')
                 ax.set_xlabel('Date')
-                ax.set_ylabel(data_type)
+                ax.set_ylabel(f'{data_type} ({window.histogram_units()})')
                 plt.xticks(rotation=30)
 
                 # Aesthetics improvements
@@ -1072,21 +1133,6 @@ def run_app():
             None
         """
         flask_app.run(debug=True, use_reloader=False)
-
-#if __name__ == "__main__":
-    """
-    processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
-
-    #app = App("Sun-valley", "light")
-    flask_process = Process(target=restApi.run_flask()).start
-
-    # Start the Flask app in a separate thread
-    app_process = Process(target=run_app()).start
-    #app.root.mainloop()
-    #flask_process = Process(target=restApi.run_flask()).start
-
-    #flask_thread.start()
-    """
 
 if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
