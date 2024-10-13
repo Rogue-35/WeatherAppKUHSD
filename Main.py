@@ -1,33 +1,22 @@
-# This project uses the following open source libraries:
+# This project uses the following open-source libraries:
 # - Tkinter (standard library)
 # - threading (standard library)
 # - asyncio (standard library)
-# - Matplotlib (version 3.9.1) - https://matplotlib.org/
-# - OpenMeteo (version 0.3.1) - https://pypi.org/project/open-meteo/
-# - openmeteo_requests (version 1.2.0) - https://pypi.org/project/openmeteo-requests/
-# - requests_cache (version 1.2.1) - https://requests-cache.readthedocs.io/
-# - pandas (version 2.2.2) - https://pandas.pydata.org/
-# - retry_requests (version 2.0.0) - https://pypi.org/project/retry-requests/
-# - requests (version 2.32.3) - https://requests.readthedocs.io/
-# - Flask (version 3.0.3) - https://flask.palletsprojects.com/
-
-
-# project_root/
-# │
-# ├── main.py -
-# ├── gui.py - App class
-# ├── data.py
-# ├── restApi.py
-# ├── config.py
-# ├── requirements.txt
-# └── README.md
-
+# - Matplotlib - https://matplotlib.org/
+# - OpenMeteo - https://pypi.org/project/open-meteo/
+# - openmeteo_requests - https://pypi.org/project/openmeteo-requests/
+# - requests_cache - https://requests-cache.readthedocs.io/
+# - pandas - https://pandas.pydata.org/
+# - retry_requests - https://pypi.org/project/retry-requests/
+# - requests - https://requests.readthedocs.io/
+# - Flask - https://flask.palletsprojects.com/
+# - psutil - https://pypi.org/project/psutil/
+# - click - https://pypi.org/project/click/
+# - TKinterModernThemes - https://pypi.org/project/TKinterModernThemes/
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from tkinter.ttk import Checkbutton
-from multiprocessing import Process
-
 import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
 from click import command
@@ -53,8 +42,6 @@ temperatureMin = []
 precipitationSum = []
 windSpeedMax = []
 precipitationProbabilityMax = []
-
-
 
 class App(TKMT.ThemedTKinterFrame):
     # lookup table for weather code
@@ -165,39 +152,43 @@ class App(TKMT.ThemedTKinterFrame):
     longitude_set = 0
 
     def __init__(window, theme, mode, usecommandlineargs=True, usethemeconfigfile=True):
-        super().__init__("Orion Weather", theme, mode, usecommandlineargs=usecommandlineargs, useconfigfile=usethemeconfigfile)
-
-        window.open = False
-        window.theme = theme
-
-        window.root.iconbitmap("Icons/cloud_icon.ico")
-
         """
-        Initialize the frame with given parent widget.
+        This is the constructor (initialization function) for the Orion Weather application window.
+        It inherits from a base class (likely a custom class for window management) with specific arguments.
 
         Args:
-            parent (tk.Widget): Parent widget to which this frame belongs.
+            window (object): The parent window object.
+            theme (str): The theme to use for the application (light, dark, etc.).
+            mode (str): The mode to run the application in (unknown purpose in this snippet).
+            usecommandlineargs (bool, optional): Whether to use command-line arguments for configuration (default True).
+            usethemeconfigfile (bool, optional): Whether to use a theme configuration file (default True).
         """
 
-        window.theme_var = tk.BooleanVar(value=False)
-        window.units_var = tk.BooleanVar(value=True)  # False for Imperial Units
+        super().__init__("Orion Weather", theme, mode, usecommandlineargs=usecommandlineargs,
+                         useconfigfile=usethemeconfigfile)
 
-        # Make the app responsive
+        window.open = False  # Flag to track if the settings window is open
+        window.theme = theme  # Store the theme
+
+        window.root.iconbitmap("Icons/cloud_icon.ico")  # Set the application icon
+
+        window.theme_var = tk.BooleanVar(value=False)  # Variable to track theme preference (False for default theme)
+        window.units_var = tk.BooleanVar(value=True)  # Variable to track unit preference (False for Metric, True for Imperial)
+
+        # Make the application window responsive across different screen sizes
         for index in [0, 1, 2]:
             window.root.columnconfigure(index=index, weight=1)
             window.root.rowconfigure(index=index, weight=1)
 
-        # Create lists of data types and categories
+        # Create lists of data types and categories for weather information
         window.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                  'Precipitation Probability']
         window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
-                                          'Precipitation Probability']
-        window.data_cat = ['Max', 'Min', 'Mean', 'Single']
+                                          'Precipitation Probability'] # for histogram
+        window.data_cat = ['Max', 'Min', 'Mean', 'Single']  # Options for how to display data (Max, Min, Average, Single value)
 
-        window.precision_slider_stored = 2  # Default value if not called - Prevent errors
-
-        # Set up all widgets within the frame
-        window.setup_widgets()
+        window.precision_slider_stored = 4  # Default value for decimal precision
+        window.setup_widgets()  # Call the function to set up all widgets within the window
 
     def setup_widgets(window):
         """
@@ -211,64 +202,63 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.header_frame = ttk.Frame(window.root, padding=(20, 10))
         window.root.header_frame.grid(row=0, column=0, sticky="EW")
 
-        # Upload Button
-        window.root.upload_button = ttk.Button(window.root.header_frame, text="Upload Input File", command=window.upload_file)
+        # Upload Button to select input file
+        window.root.upload_button = ttk.Button(window.root.header_frame, text="Upload Input File",
+                                               command=window.upload_file)
         window.root.upload_button.grid(row=0, column=0, padx=5, pady=5)
 
-        # Close Button
+        # Close Button to close the application
         window.root.close_button = ttk.Button(window.root.header_frame, text="Close", command=window.quitapp)
         window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
 
-        # Body frame for notebook
+        # Body frame for the notebook widget (tabbed interface)
         window.root.body_frame = ttk.Frame(window.root)
 
-        #Settings button
-        window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings", command=window.settings_window)
+        # Settings Button to open the settings window
+        window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings",
+                                                 command=window.settings_window)
         window.root.settings_button.grid(row=0, column=1, padx=5, pady=5)
 
-        # Notebook widget for tabs
+        # Notebook widget for adding tabs
         window.root.notebook = ttk.Notebook(window.root.body_frame)
 
-        # Tab #1: Data Output
+        # Tab #1: Data Output Tab
         window.root.tab_1 = ttk.Frame(window.root.notebook)
         window.root.notebook.add(window.root.tab_1, text="Data Output")
 
-        # Statistics frame within Tab #1
+        # Statistics frame within Tab #1 for displaying data
         window.root.weather_code_frame = ttk.LabelFrame(window.root.tab_1, text="Statistics", padding=(20, 10))
         window.root.weather_code_frame.grid(row=2, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
-        # Start Date Dropdown
+        # Start Date Dropdown for selecting the start date
         window.root.start_date_dropdown = ttk.Combobox(window.root.tab_1, state="readonly", values=dates)
         window.root.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
         window.root.start_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
-        # Data Type Dropdown
-        window.root.data_dropdown = ttk.Combobox(window.root.tab_1, state="readonly", values=window.data_type_list_complete, )
+        # Data Type Dropdown for selecting the type of data
+        window.root.data_dropdown = ttk.Combobox(window.root.tab_1, state="readonly",
+                                                 values=window.data_type_list_complete)
         window.root.data_dropdown.grid(row=0, column=0, padx=5, pady=5)
         window.root.data_dropdown.bind("<<ComboboxSelected>>", window.data_test)
 
-        #data category dropdown
-        window.root.data_cat_dropdown = ttk.Combobox(
-            window.root.tab_1, state="readonly", values=window.data_cat
-        )
+        # Data Category Dropdown (hidden by default)
+        window.root.data_cat_dropdown = ttk.Combobox(window.root.tab_1, state="readonly", values=window.data_cat)
         window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.data_test)
         window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
         window.root.data_cat_dropdown.grid_remove()
 
-        #end date dropdown
-        window.root.end_date_dropdown = ttk.Combobox(window.root.tab_1, state="readonly"
-        )
+        # End Date Dropdown (hidden by default)
+        window.root.end_date_dropdown = ttk.Combobox(window.root.tab_1, state="readonly")
         window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
         window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.data_test)
         window.root.end_date_dropdown.grid_remove()
 
-
-        # Output Text Label
+        # Output Text Label to display data
         window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
         window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
-        # Latitude and Longitude Entry Fields
-        window.root.lat = ttk.Entry(window.root.tab_1, width=30,)
+        # Latitude Entry Field for user to input latitude
+        window.root.lat = ttk.Entry(window.root.tab_1, width=30)
         window.root.lat.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW", columnspan=2)
         window.root.lat.bind('<0>', window.lat_long_entry)
         window.root.lat.bind('<1>', window.lat_long_entry, add="+")
@@ -281,8 +271,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.lat.bind('<8>', window.lat_long_entry, add="+")
         window.root.lat.bind('<9>', window.lat_long_entry, add="+")
 
-
-
+        # Longitude Entry Field for user to input longitude
         window.root.long = ttk.Entry(window.root.tab_1, width=30)
         window.root.long.grid(row=1, column=2, padx=5, pady=5, sticky="NSEW", columnspan=2)
         window.root.long.bind('<0>', window.lat_long_entry)
@@ -296,7 +285,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.long.bind('<8>', window.lat_long_entry, add="+")
         window.root.long.bind('<9>', window.lat_long_entry, add="+")
 
-        # Tab #2: Histogram
+        # Tab #2: Histogram Tab
         window.root.tab_2 = ttk.Frame(window.root.notebook)
         window.root.notebook.add(window.root.tab_2, text="Histogram")
 
@@ -304,56 +293,42 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.histogram_frame = ttk.LabelFrame(window.root.tab_2, text="Histogram")
         window.root.histogram_frame.grid(row=2, column=0, padx=10, pady=10, sticky="NSEW")
 
-        # Histogram Data Type Dropdown
-        window.root.histogram_data_type_dropdown = ttk.Combobox(
-            window.root.histogram_frame, state="readonly", values=window.data_type_list
-        )
+        # Histogram Data Type Dropdown for selecting the type of data to display in the histogram
+        window.root.histogram_data_type_dropdown = ttk.Combobox(window.root.histogram_frame, state="readonly",
+                                                                values=window.data_type_list)
         window.root.histogram_data_type_dropdown.grid(row=0, column=0, pady=10, padx=10)
         window.root.histogram_data_type_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
         # Histogram Start Date Dropdown
-        window.root.histogram_start_date_dropdown = ttk.Combobox(
-            window.root.histogram_frame, state="readonly", values=dates
-        )
+        window.root.histogram_start_date_dropdown = ttk.Combobox(window.root.histogram_frame, state="readonly",
+                                                                 values=dates)
         window.root.histogram_start_date_dropdown.grid(row=0, column=1, padx=10, pady=10)
         window.root.histogram_start_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
-
         # Histogram End Date Dropdown
-        window.root.histogram_end_date_dropdown = ttk.Combobox(
-            window.root.histogram_frame, state="readonly", values=dates
-        )
+        window.root.histogram_end_date_dropdown = ttk.Combobox(window.root.histogram_frame, state="readonly",
+                                                               values=dates)
         window.root.histogram_end_date_dropdown.grid(row=0, column=2, padx=10, pady=10)
         window.root.histogram_end_date_dropdown.bind("<<ComboboxSelected>>", window.plot_histogram)
 
-        # Canvas for Histogram
+        # Placeholder for Canvas to display the histogram
         window.root.canvas = None
 
-        # Tab #3: Credits
+        # Tab #3: Credits Tab
         window.root.tab_3 = ttk.Frame(window.root.notebook)
         window.root.notebook.add(window.root.tab_3, text="Credits")
 
-        # Credits frame within Tab #3
+        # Credits frame within Tab #3 for displaying credits
         window.root.credits = ttk.LabelFrame(window.root.tab_3, text="Credits", padding=(20, 10))
         window.root.credits.grid(row=0, column=0, padx=10, pady=10)
 
-        # Credits Text Box
+        # Credits Text Box to display credits information
         window.root.credits_textbox = tk.Text(window.root.credits, wrap='word', height=30, width=90)
         window.root.credits_textbox.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', rowspan=2, columnspan=2)
 
-        # Inserting Credits Information
+        # Inserting Credits Information (empty placeholder for now)
         credits_text = (
-            "This application uses the following open source libraries:\n"
-            "- Tkinter - A Python binding to the Tk GUI toolkit.\n"
-            "- Matplotlib - A comprehensive library for creating static, animated, and interactive visualizations in Python.\n"
-            "- asyncio - Asynchronous I/O, event loop, coroutines, and tasks.\n"
-            "- OpenMeteo - A Python client for the Open-Meteo weather API.\n"
-            "- openmeteo_requests - A Python client for the Open-Meteo weather API using requests.\n"
-            "- requests_cache - A transparent persistent cache for the requests library.\n"
-            "- pandas - A fast, powerful, flexible, and easy-to-use open source data analysis and data manipulation library built on top of the Python programming language.\n"
-            "- retry_requests - A Python library to automatically retry failed HTTP requests using the requests library.\n"
-            "- requests - A simple, yet elegant HTTP library.\n"
-            "- Azure-ttk-theme - A modern theme for the Tkinter/ttk widgets."
+            # update
         )
         window.root.credits_textbox.insert('1.0', credits_text)
         window.root.credits_textbox.config(state='disabled')  # Make the text box read-only
@@ -363,78 +338,147 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.credits.grid_columnconfigure(0, weight=1)
 
     class ToggleSwitch(ttk.Checkbutton):
+        """
+        A custom toggle switch widget that inherits from ttk.Checkbutton.
+
+        This class allows the creation of a toggle switch with text that updates based
+        on the state of the switch. It uses a ttk.Checkbutton styled as a switch.
+        """
+
         def __init__(self, master, text, variable, command=None, **kwargs):
+            """
+            Initialize the ToggleSwitch.
+
+            Args:
+                master (widget): The parent widget.
+                text (str): The label text for the toggle switch.
+                variable (tk.Variable): A Tkinter variable (e.g., BooleanVar) to track the state.
+                command (callable, optional): A command function to execute when the switch is toggled.
+                **kwargs: Additional keyword arguments passed to the ttk.Checkbutton initialization.
+            """
+            # Initialize ttk.Checkbutton with custom style and link the toggle method to command
             super().__init__(master, style="Switch.TCheckbutton", variable=variable, command=self.toggle, **kwargs)
+
+            # Store the text label and the variable tracking the switch's state
             self.text = text
             self.variable = variable
-            self.user_command = command
+            self.user_command = command  # Store the user-provided command (optional)
+
+            # Update the text displayed on the switch to reflect its current state
             self.update_text()
 
         def toggle(self):
-            self.update_text()
+            """
+            Toggle the state of the switch and update the displayed text.
+
+            If a user-defined command was provided, it is also executed after the state update.
+            """
+            self.update_text()  # Update the displayed text to reflect the new state
+
+            # If a command was provided by the user, execute it
             if self.user_command:
                 self.user_command()
 
         def update_text(self):
+            """
+            Update the text label of the switch based on its current state (ON/OFF).
+            """
+            # Determine the current state of the switch and update the text accordingly
             state = "ON" if self.variable.get() else "OFF"
-            self.configure(text=f"{self.text}: {state}")
+            self.configure(text=f"{self.text}: {state}")  # Update the displayed label
 
     def setting_track(window):
+        """
+        Track and apply settings changes for the application.
+
+        This function triggers the necessary functions to apply new settings, such as adjusting
+        precision and evaluating data, and then closes the settings popup window.
+
+        """
+        # Call the function to adjust the precision slider settings
         window.precision_slider()
+
+        # Call the function to evaluate data based on new settings
         window.evaluate()
+
+        # Set the open flag to False, indicating that the settings popup is closed
         window.open = False
+
+        # Destroy the settings popup window to close it
         window.root.settings_popup.destroy()
 
     def settings_window(window):
+        """
+        Open the settings window where the user can adjust various application preferences.
+
+        This function checks if the settings window is already open to prevent multiple instances. It then creates a popup window
+        where the user can modify settings like dark mode, units, and precision, and choose different styles.
+        """
+        # Check if the settings window is already open; if yes, do nothing
         if window.open:
             return
+
+        # Set the flag to indicate that the settings window is now open
         window.open = True
 
+        # Create a new popup window for settings
         window.root.settings_popup = tk.Toplevel(window.root)
         window.root.settings_popup.title("Settings")
+
+        # Make the settings window not resizable
         window.root.settings_popup.resizable(False, False)
+
+        # Set the size of the settings window
         window.root.settings_popup.geometry("400x400")
+
+        # Set the icon for the settings window
         window.root.settings_popup.iconbitmap("Icons/settings.ico")
 
-        # Configure the grid
+        # Configure grid columns and rows to allow resizing within the window
         window.root.settings_popup.grid_columnconfigure(0, weight=1)
         window.root.settings_popup.grid_rowconfigure(1, weight=1)
 
-        # Create and configure the title style
+        # Create a style for the title label
         title_style = ttk.Style()
         title_style.configure("Title.TLabel", font=("TkDefaultFont", 16, "bold"))
 
-        # Create the title label
+        # Create and place the title label
         settings_title = ttk.Label(window.root.settings_popup, text="Settings", style="Title.TLabel")
         settings_title.grid(row=0, column=0, padx=10, pady=10, sticky="N")
 
-        # Create the settings frame
+        # Create a frame to hold the settings options
         settings_frame = ttk.Frame(window.root.settings_popup)
         settings_frame.grid(row=1, column=0, padx=20, pady=10, sticky="NSEW")
 
-        # Create theme switch
+        # Create a switch for toggling dark mode
         theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var,
                                            command=window.update_theme)
         theme_switch.grid(row=0, column=0, sticky="W", pady=10)
 
-        # Create units switch
+        # Create a switch for toggling between Imperial and Metric units
         units_switch = window.ToggleSwitch(settings_frame, text="Imperial Units", variable=window.units_var)
         units_switch.grid(row=1, column=0, sticky="W", pady=10)
 
-        # Create other settings widgets
+        # Create a label and dropdown for selecting a style theme
         window.root.styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
         window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
+
+        # Available styles
         window.root.styles = "Sun-valley", "Park", "Azure"
+
+        # Create the style dropdown menu
         window.root.style_dropdown = ttk.Combobox(settings_frame, state="readonly", values=window.root.styles)
         window.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
         window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
 
+        # Create a label and slider for adjusting precision
         Precision_label = ttk.Label(settings_frame, text="Precision")
         Precision_label.grid(row=5, column=0, padx=10, pady=10, sticky="NW")
-        window.root.Precision_slider = ttk.Scale(settings_frame, value=window.precision_slider_stored, from_=0, to=4, orient='horizontal')
+        window.root.Precision_slider = ttk.Scale(settings_frame, value=window.precision_slider_stored, from_=0, to=4,
+                                                 orient='horizontal')
         window.root.Precision_slider.grid(row=5, column=1, padx=10, pady=10, sticky="NSEW")
 
-        # Create the close button
+        # Create a close button to apply changes and close the settings window
         window.root.close_settings_button = ttk.Button(
             window.root.settings_popup,
             text="Close",
@@ -443,227 +487,444 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.close_settings_button.grid(row=6, column=0, padx=10, pady=10, sticky="SE")
 
     def precision_slider(window):
+        """
+        Retrieve and store the current value from the precision slider.
 
+        This function attempts to get the current value from the precision slider. If successful,
+        it updates the stored precision value. If an error occurs (e.g., the slider is not accessible),
+        the stored precision value remains unchanged.
+
+        Returns:
+            int: The stored precision value.
+        """
         try:
+            # Get the current value from the precision slider and store it as an integer
             window.precision_slider_stored = int(window.root.Precision_slider.get())
             return window.precision_slider_stored
         except:
+            # In case of an error, return the previously stored precision value
             return window.precision_slider_stored
 
     def update_theme(window):
+        """
+        Update the application theme based on the current state of the theme switch.
+
+        This function checks the value of the theme toggle variable to determine whether dark mode
+        should be enabled or light mode should be set. It then updates the application theme accordingly.
+        """
+        # Set the theme to "dark" if the theme switch is on, otherwise set to "light"
         window.theme = "dark" if window.theme_var.get() else "light"
+
+        # Apply the selected theme to the application
         window.root.tk.call("set_theme", window.theme)
 
     def update_styles(window):
+        """
+        Update the application's style based on the user's selection from the style dropdown.
+
+        This function retrieves the selected style from the dropdown menu and applies it to the
+        application by calling the appropriate theme update function.
+        """
+        # Get the selected style from the style dropdown
         window.mode = window.root.style_dropdown.get()
 
+        # Apply the selected style to the application
         window.root.tk.call("set_theme", window.mode)
 
     def lat_long_entry(window, event):
         """
         Process latitude and longitude values entered by the user.
 
-        This method retrieves latitude and longitude values from Entry widgets
-        and calls the evaluate method to process them.
+        This method retrieves the values from the latitude and longitude entry widgets. If either field
+        is empty, it assigns a default value of 0. After retrieving the values, it calls the evaluate
+        method to further process the input.
 
         Args:
-            event (tk.Event, optional): The event that triggered this method.
+            event (tk.Event, optional): The event that triggered this method (e.g., keypress).
         """
-        # Get the latitude and longitude values from the Entry widgets
+        # Retrieve the latitude value, defaulting to 0 if the entry is empty
         if window.root.lat.get() == '':
             window.latitude_set = 0
         else:
             window.latitude_set = float(window.root.lat.get())
 
+        # Retrieve the longitude value, defaulting to 0 if the entry is empty
         if window.root.long.get() == '':
             window.longitude_set = 0
         else:
             window.longitude_set = float(window.root.long.get())
 
-        # Call the evaluate method to process the latitude and longitude values
+        # Call the evaluate method to process the retrieved latitude and longitude values
         window.evaluate()
 
     def data_test(window, event):
+        """
+        Handle the selection of data type and category from the dropdowns, adjusting the UI based on the selection.
+
+        This method checks the selected data type and category, modifies the visibility of the date dropdowns,
+        and ensures that appropriate widgets are shown or hidden based on the user's selection. It then updates
+        the end date dropdown values and calls the evaluate method to process the data.
+
+        Args:
+            event (tk.Event): The event that triggered this method (e.g., dropdown selection).
+        """
+        # Retrieve the selected data type and category
         data_type = window.root.data_dropdown.get()
         category = window.root.data_cat_dropdown.get() if hasattr(window.root, 'data_cat_dropdown') else None
-        #if hasattr(window, 'end_date_dropdown'):
-        #window.root.end_date_dropdown.grid_remove()
-        # Always show start date dropdown
+
+        # Always show the start date dropdown
         window.root.start_date_dropdown.grid(row=0, column=2, padx=5, pady=5, sticky="W")
-        print(category)
+
+        # If data type is 'Weather Code', hide category and end date dropdowns
         if data_type == 'Weather Code':
             if hasattr(window, 'data_cat_dropdown'):
-                window.root.data_cat_dropown.grid_remove()
+                window.root.data_cat_dropdown.grid_remove()  # Hide category dropdown
             if hasattr(window, 'end_date_dropdown'):
-                window.root.end_date_dropdown.grid_remove()
+                window.root.end_date_dropdown.grid_remove()  # Hide end date dropdown
         else:
+            # Show the category dropdown
             window.root.data_cat_dropdown.grid(row=0, column=1, padx=5, pady=5)
-            window.root.end_date_dropdown.grid_remove()
+            window.root.end_date_dropdown.grid_remove()  # Initially hide the end date dropdown
 
+            # Show end date dropdown if category is not 'Single'
             if category != 'Single':
                 window.root.end_date_dropdown.grid(row=0, column=3, padx=5, pady=5)
             else:
                 window.root.end_date_dropdown.grid_remove()
 
+        # Update the end date dropdown with available dates
         window.root.end_date_dropdown['values'] = dates
+
+        # Call the evaluate method to process the current selections
         window.evaluate()
 
     def evaluate(window):
         """
-        Sets the output text based on user-selected data category and type.
+        Evaluate and set the output text based on the user-selected data category and data type.
+
+        This method retrieves the selected data type and category from the dropdowns, and then
+        determines the appropriate data handling method to call. It also converts units as needed
+        before processing the data.
         """
+        # Convert units if necessary
         window.convert_units()
+
+        # Retrieve the selected data type and category
         data_type = window.root.data_dropdown.get()
         category = window.root.data_cat_dropdown.get() if hasattr(window.root, 'data_cat_dropdown') else None
+
+        # Handle different data types and categories
         if data_type == "Weather Code":
+            # Handle the weather code data type
             window.handle_weather_code()
         elif category == "Single":
+            # Handle single data category
             window.handle_single_data(data_type)
         elif category in ["Mean", "Max", "Min"]:
+            # Handle aggregate data for mean, max, and min categories
             window.handle_aggregate_data(data_type, category)
 
     def units(window):
+        """
+        Determine the appropriate unit of measurement based on the selected data type and user preference for units.
+
+        This method checks the selected data type from the dropdown and the user's choice between Imperial
+        and Metric units. It returns the corresponding unit of measurement for temperature, precipitation,
+        wind speed, and precipitation probability.
+
+        Returns:
+            str: The unit of measurement for the selected data type, or None for non-applicable types.
+        """
+        # Get the selected data type
         data_type = window.root.data_dropdown.get()
+
         if window.units_var.get():  # True for Imperial Units
             if data_type == "Weather Code":
-                return
+                return  # No units for weather code
             elif data_type == "Temp High" or data_type == "Temp Low":
-                return "°F"
+                return "°F"  # Fahrenheit for temperature
             elif data_type == "Precipitation Amount":
-                return "inches"
+                return "inches"  # Inches for precipitation
             elif data_type == "Wind Speed":
-                return "mph"
+                return "mph"  # Miles per hour for wind speed
             elif data_type == "Precipitation Probability":
-                return "%"
+                return "%"  # Percentage for precipitation probability
         else:  # Metric Units
             if data_type == "Weather Code":
-                return
+                return  # No units for weather code
             elif data_type == "Temp High" or data_type == "Temp Low":
-                return "°C"
+                return "°C"  # Celsius for temperature
             elif data_type == "Precipitation Amount":
-                return "mm"
+                return "mm"  # Millimeters for precipitation
             elif data_type == "Wind Speed":
-                return "km/h"
+                return "km/h"  # Kilometers per hour for wind speed
             elif data_type == "Precipitation Probability":
-                return "%"
-    
+                return "%"  # Percentage for precipitation probability
+
     def histogram_units(window):
+        """
+        Determine the appropriate unit of measurement for the histogram based on the selected data type
+        and user preference for units.
+
+        This method checks the selected data type from the histogram dropdown and the user's choice
+        between Imperial and Metric units. It returns the corresponding unit of measurement for
+        temperature, precipitation, wind speed, and precipitation probability.
+
+        Returns:
+            str: The unit of measurement for the selected data type, or None for non-applicable types.
+        """
+        # Get the selected data type for the histogram
         data_type = window.root.histogram_data_type_dropdown.get()
+
         if window.units_var.get():  # True for Imperial Units
             if data_type == "Temp High" or data_type == "Temp Low":
-                return "°F"
+                return "°F"  # Fahrenheit for temperature
             elif data_type == "Precipitation Amount":
-                return "inches"
+                return "inches"  # Inches for precipitation
             elif data_type == "Wind Speed":
-                return "mph"
+                return "mph"  # Miles per hour for wind speed
             elif data_type == "Precipitation Probability":
-                return "%"
+                return "%"  # Percentage for precipitation probability
         else:  # Metric Units
             if data_type == "Temp High" or data_type == "Temp Low":
-                return "°C"
+                return "°C"  # Celsius for temperature
             elif data_type == "Precipitation Amount":
-                return "mm"
+                return "mm"  # Millimeters for precipitation
             elif data_type == "Wind Speed":
-                return "km/h"
+                return "km/h"  # Kilometers per hour for wind speed
             elif data_type == "Precipitation Probability":
-                return "%"
-    
+                return "%"  # Percentage for precipitation probability
+
+    #set last units to the starting value
     last_unit_type = True
+
     def convert_units(window):
+        """
+        Converts weather data between Imperial and Metric units based on user preference.
+
+        The function checks if the user has switched the unit type and performs the necessary
+        conversions for temperature, precipitation, and wind speed.
+
+        Args:
+            window: The main application window object.
+        """
+        # Get the current unit type preference from the user's settings
         unit_type = window.units_var.get()
 
-        print(unit_type)
-        print(window.last_unit_type)
+        # If the unit type hasn't changed, no conversion is needed
         if unit_type == window.last_unit_type:
-            return  # No conversion needed if the unit type hasn't changed
+            return
 
-        if not unit_type:  # Imperial to Metric conversion
+        if not unit_type:  # Converting from Imperial to Metric
             for i in range(len(dates)):
                 # Convert temperature from Fahrenheit to Celsius
                 temperatureMax[i] = (float(temperatureMax[i]) - 32) * 5 / 9
                 temperatureMin[i] = (float(temperatureMin[i]) - 32) * 5 / 9
 
                 # Convert precipitation from inches to millimeters
-                precipitationSum[i] = float(precipitationSum[i])*25.4
+                precipitationSum[i] = float(precipitationSum[i]) * 25.4
 
                 # Convert wind speed from miles per hour to kilometers per hour
-                windSpeedMax[i] = float(windSpeedMax[i])*1.60934
-                window.last_unit_type = False
-        else:  # Metric to Imperial conversion
+                windSpeedMax[i] = float(windSpeedMax[i]) * 1.60934
+
+            # Update the last unit type to reflect the current setting
+            window.last_unit_type = False
+
+        else:  # Converting from Metric to Imperial
             for i in range(len(dates)):
                 # Convert temperature from Celsius to Fahrenheit
                 temperatureMax[i] = (float(temperatureMax[i]) * 9 / 5) + 32
                 temperatureMin[i] = (float(temperatureMin[i]) * 9 / 5) + 32
 
                 # Convert precipitation from millimeters to inches
-                precipitationSum[i] = float(precipitationSum[i])/25.4
+                precipitationSum[i] = float(precipitationSum[i]) / 25.4
 
                 # Convert wind speed from kilometers per hour to miles per hour
-                windSpeedMax[i] = float(windSpeedMax[i])/1.60934
-                window.last_unit_type = True
+                windSpeedMax[i] = float(windSpeedMax[i]) / 1.60934
 
-        #last_unit_type = unit_type
-
+            # Update the last unit type to reflect the current setting
+            window.last_unit_type = True
 
     def handle_weather_code(window):
+        """
+        Handles the retrieval and display of weather codes based on user selection.
+
+        This method retrieves the weather code for the selected date, calls an external method
+        to obtain the real weather code, and sets the output text accordingly.
+        """
+        # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
+
+        # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
+            # Find the index of the selected date
             index = dates.index(selected_date)
+
+            # Retrieve the weather code associated with the selected date
             weather_code = int(float(weatherCode[index]))
+
+            # Call the openMeteoSetup method to get the real weather code
             weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
                                                       window.longitude_set)
+
+            # Set the output text with both the input and real weather codes
             window.set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
                               f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
 
     def handle_single_data(window, data_type):
+        """
+        Handles the retrieval and display of single data values based on user selection.
+
+        This method retrieves the input and real data for the selected date and data type,
+        and sets the output text accordingly.
+
+        Args:
+            data_type: The type of data being retrieved (e.g., temperaturemin, precipitation).
+        """
+        # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
+
+        # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
+            # Find the index of the selected date
             index = dates.index(selected_date)
+
+            # Retrieve the real data from the external source
             real_data = window.openMeteoSetup(index, index, data_type, window.latitude_set, window.longitude_set)
+
+            # Get the input data based on the selected data type
             input_data = window.get_input_data(data_type, index)
+
+            # Set the output text with formatted input and real data values
             window.set_output(
-                f"Input {data_type}: {(float(input_data)):.{window.precision_slider()}f} {window.units()}\n\nReal {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}")
+                f"Input {data_type}: {(float(input_data)):.{window.precision_slider()}f} {window.units()}\n\n"
+                f"Real {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}"
+            )
 
     def handle_aggregate_data(window, data_type, category):
+        """
+        Handles the retrieval and display of aggregated data values based on user selection.
+
+        This method calculates the aggregate input and real data for the specified date range
+        and data type, and sets the output text accordingly.
+
+        Args:
+            data_type: The type of data being retrieved (e.g., temperaturemin, precipitation).
+            category: The type of aggregation to perform (e.g., mean, max, min).
+        """
+        # Get the indices for the start and end dates from the dropdowns
         start_date = dates.index(window.root.start_date_dropdown.get())
         end_date = dates.index(window.root.end_date_dropdown.get())
-        input_data = window.calculate_aggregate(window.get_input_data_list(data_type), start_date, end_date, category)
+
+        # Calculate the aggregate input data from the user's input list
+        input_data = window.calculate_aggregate(
+            window.get_input_data_list(data_type), start_date, end_date, category
+        )
+
+        # Calculate the aggregate real data from the external source
         real_data = window.calculate_aggregate(
-            window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set), 0,
-            end_date - start_date, category)
+            window.openMeteoSetup(start_date, end_date, data_type, window.latitude_set, window.longitude_set),
+            0,
+            end_date - start_date,
+            category
+        )
+
+        # Set the output text with formatted aggregate input and real data values
         window.set_output(
-            f"{category} Input {data_type}: {input_data:.{window.precision_slider()}f} {window.units()}\n\n{category} Real {data_type}: {real_data:.{window.precision_slider()}f} {window.units()}")
+            f"{category} Input {data_type}: {input_data:.{window.precision_slider()}f} {window.units()}\n\n"
+            f"{category} Real {data_type}: {real_data:.{window.precision_slider()}f} {window.units()}"
+        )
 
     def get_input_data(window, data_type, index):
+        """
+        Retrieves a specific data value based on the selected data type and index.
+
+        This function accesses predefined data lists for different types of weather-related
+        data and returns the value at the specified index, formatted as a string.
+
+        Args:
+            data_type: The type of data being retrieved (e.g., Temp Low, Temp High).
+            index: The index of the desired value in the corresponding data list.
+
+        Returns:
+            A string representation of the data value at the specified index.
+        """
+        # Define a mapping of data types to their corresponding data lists
         data_mapping = {
-            "Temp Low": (temperatureMin),
-            "Temp High": (temperatureMax),
-            "Precipitation Amount": (precipitationSum),
-            "Wind Speed": (windSpeedMax),
+            "Temp Low": (temperatureMin),  # Maps "Temp Low" to the temperatureMin data
+            "Temp High": (temperatureMax),  # Maps "Temp High" to the temperatureMax data
+            "Precipitation Amount": (precipitationSum),  # Maps "Precipitation Amount" to the precipitationSum data
+            "Wind Speed": (windSpeedMax),  # Maps "Wind Speed" to the windSpeedMax data
             "Precipitation Probability": (precipitationProbabilityMax)
+            # Maps "Precipitation Probability" to the precipitationProbabilityMax data
         }
+
+        # Retrieve the list of data corresponding to the specified data type
         data_list = data_mapping[data_type]
+
+        # Return the data at the specified index, formatted as a string
         return f"{(data_list[index])}"
 
     def get_input_data_list(window, data_type):
+        """
+        Retrieves the list of data values corresponding to the specified data type.
+
+        This function provides access to predefined lists of weather-related data values
+        based on the user-selected data type.
+
+        Args:
+            data_type: The type of data being retrieved (e.g., Temp Low, Temp High).
+
+        Returns:
+            A list of data values associated with the specified data type.
+        """
+        # Define a mapping of data types to their corresponding data lists and return the relevant list
         return {
-            "Temp Low": temperatureMin,
-            "Temp High": temperatureMax,
-            "Precipitation Amount": precipitationSum,
-            "Wind Speed": windSpeedMax,
-            "Precipitation Probability": precipitationProbabilityMax
+            "Temp Low": temperatureMin,  # List of minimum temperature values
+            "Temp High": temperatureMax,  # List of maximum temperature values
+            "Precipitation Amount": precipitationSum,  # List of total precipitation values
+            "Wind Speed": windSpeedMax,  # List of maximum wind speed values
+            "Precipitation Probability": precipitationProbabilityMax  # List of precipitation probabilities
         }[data_type]
 
     def calculate_aggregate(window, data_list, start, end, category):
+        """
+        Calculates the aggregate value of a specified category from a list of data.
+
+        This function computes the mean, maximum, or minimum value of a subset of data
+        defined by the start and end indices.
+
+        Args:
+            data_list: A list of numerical data values to aggregate.
+            start: The starting index for the subset of data.
+            end: The ending index for the subset of data.
+            category: The type of aggregation to perform (e.g., Mean, Max, Min).
+
+        Returns:
+            The calculated aggregate value based on the specified category.
+        """
+        # Convert the specified range of data values to floats for calculation
         values = [float(temp) for temp in data_list[start:end + 1]]
+
+        # Calculate and return the aggregate value based on the specified category
         if category == "Mean":
-            return sum(values) / len(values)
+            return sum(values) / len(values) if values else 0  # Prevent division by zero
         elif category == "Max":
-            return max(values)
+            return max(values) if values else float('-inf')  # Return negative infinity if no values
         elif category == "Min":
-            return min(values)
+            return min(values) if values else float('inf')  # Return positive infinity if no values
 
     def set_output(window, text):
+        """
+        Sets the output text in the designated output area of the window.
+
+        This function updates the output text widget to display the provided text
+        with a specified font size.
+
+        Args:
+            text: The text to display in the output area.
+        """
+        # Configure the output text widget with the new text and font settings
         window.root.output_text.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
@@ -688,12 +949,19 @@ class App(TKMT.ThemedTKinterFrame):
             - histogram_start_date_dropdown, histogram_end_date_dropdown, start_date_dropdown, end_date_dropdown:
               Sets their values to the parsed 'dates' list.
         """
+        # Declare global variables to hold parsed weather data
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
+
+        # Split the input data into lines
         lines = input.split('\n')
+
+        # Parse each line and assign values to the corresponding global variable
         for line in lines:
             parts = line.split(': ')
-            key = parts[0]
-            values = parts[1].split()
+            key = parts[0]  # Extract the key from the line
+            values = parts[1].split()  # Extract the values and split them into a list
+
+            # Assign values to global variables based on the key
             if key == 'date':
                 dates = values
             elif key == 'weather_code':
@@ -709,15 +977,7 @@ class App(TKMT.ThemedTKinterFrame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
-        # will be removed in final edit
-        print("Dates: ", dates)
-        print("Weather Codes: ", weatherCode)
-        print("Max Temperatures: ", temperatureMax + "F")
-        print("Min Temperatures: ", temperatureMin + "F")
-        print("Precipitation Sum: ", precipitationSum)
-        print("Max Wind Speed: ", windSpeedMax + "mph")
-        print("Precipitation Probability Max: ", precipitationProbabilityMax + "%")
-
+        # Update the dropdown values in the GUI with the parsed dates
         window.root.histogram_start_date_dropdown['values'] = dates
         window.root.histogram_end_date_dropdown['values'] = dates
         window.root.start_date_dropdown['values'] = dates
@@ -725,39 +985,43 @@ class App(TKMT.ThemedTKinterFrame):
 
     def update_api(window):
         """
-            Updates the date dropdowns when the REST API is used
+        Updates the date dropdowns in the GUI based on the currently available dates.
 
-            Args: None
-
+        This function refreshes the values in the start and end date dropdowns
+        to reflect the most recent data  from the REST API.
         """
+        # Update the start date dropdown with the available dates
         window.root.start_date_dropdown['values'] = dates
+
+        # Update the end date dropdown with the available dates
         window.root.end_date_dropdown['values'] = dates
 
-    # Uploads file
     def upload_file(window):
         """
         Open a file dialog to select a file and read its contents.
 
         The selected file's contents are read and passed to the 'write_file' method
-        for further processing.
-
-        If the file is not found or cannot be read, an error message is displayed.
-
-        This method is typically used to upload a file containing weather data.
+        for further processing. If the file is not found or cannot be read, an error
+        message is displayed.
 
         Raises:
             FileNotFoundError: If the selected file is not found or cannot be read.
-
         """
+        # Open a file dialog for the user to select a file
         file_path = filedialog.askopenfilename()
+
+        # If a file was selected
         if file_path:
             try:
+                # Attempt to open and read the contents of the selected file
                 with open(file_path, 'r') as file:
-                    text = file.read()
-                    window.write_file(text)
+                    text = file.read()  # Read the file contents
+                    window.write_file(text)  # Pass the contents to the write_file method
             except FileNotFoundError:
+                # Show an error message if the file cannot be read
                 messagebox.showerror(title='Error', message='File Read Error')
 
+        # Update the layout of the window after file upload
         window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
         window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
         window.root.notebook.pack(fill="both", expand=True)
@@ -769,22 +1033,29 @@ class App(TKMT.ThemedTKinterFrame):
         Args:
             event: Event object that triggered the method.
 
-        Retrieves data type, start date, and end date from dropdowns. Constructs a histogram
+        Retrieves the data type, start date, and end date from dropdowns. Constructs a histogram
         using matplotlib based on the selected data type and the corresponding data from
-        start date to end date.
+        the start date to the end date.
 
-        Clears previous plot if it exists and updates the canvas with the new histogram.
-
+        Clears the previous plot if it exists and updates the canvas with the new histogram.
         """
+        # Get the selected data type, start date, and end date from the dropdowns
         data_type = window.root.histogram_data_type_dropdown.get()
         start_date = window.root.histogram_start_date_dropdown.get()
         end_date = window.root.histogram_end_date_dropdown.get()
+
+        # Convert units as necessary for the plot
         window.convert_units()
+
+        # Proceed only if all necessary selections are made
         if data_type and start_date and end_date:
+            # Determine the indices for the selected date range
             start_index = dates.index(start_date)
             end_index = dates.index(end_date) + 1
 
+            # Ensure that the start index is less than the end index
             if start_index < end_index:
+                # Retrieve the corresponding data for the selected data type
                 data = {
                     'Temp Low': temperatureMin[start_index:end_index],
                     'Temp High': temperatureMax[start_index:end_index],
@@ -793,9 +1064,10 @@ class App(TKMT.ThemedTKinterFrame):
                     'Precipitation Probability': precipitationProbabilityMax[start_index:end_index]
                 }[data_type]
 
+                # Convert data to float for plotting
                 data = [float(d) for d in data]
 
-                # Plot data against dates
+                # Create a new figure and axis for the histogram
                 fig, ax = plt.subplots()
                 ax.plot(dates[start_index:end_index], data, marker="D")
                 ax.set_title(f'{data_type} over Time')
@@ -803,7 +1075,7 @@ class App(TKMT.ThemedTKinterFrame):
                 ax.set_ylabel(f'{data_type} ({window.histogram_units()})')
                 plt.xticks(rotation=30)
 
-                # Aesthetics improvements
+                # Aesthetic improvements for the plot
                 ax.spines['top'].set_visible(False)
                 ax.spines['right'].set_visible(False)
                 ax.spines['left'].set_visible(False)
@@ -813,68 +1085,197 @@ class App(TKMT.ThemedTKinterFrame):
                 ax.yaxis.label.set_color('#777777')
                 ax.set_facecolor('#EEEEEE')
 
+                # Optimize layout to fit elements nicely
                 fig.tight_layout()
 
-                # Clear previous plot
+                # Clear the previous plot if it exists
                 if window.root.canvas:
                     window.root.canvas.get_tk_widget().destroy()
 
+                # Create a new canvas to display the histogram
                 window.canvas = FigureCanvasTkAgg(fig, master=window.root.histogram_frame)
                 window.canvas.draw()
                 window.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
     def openMeteoSetup(window, start_date, end_date, data_type_input, latitude, longitude):
-        """Set up and retrieve weather data from Open-Meteo API."""
+        """
+        Set up and retrieve weather data from the Open-Meteo API.
+
+        This function configures the API client, builds the request parameters,
+        fetches the weather data, processes it, and extracts the requested data
+        based on the specified input.
+
+        Args:
+            start_date: The index of the starting date from the dates list.
+            end_date: The index of the ending date from the dates list.
+            data_type_input: The type of weather data to be retrieved (e.g., temperature, precipitation).
+            latitude: The latitude for the weather data request.
+            longitude: The longitude for the weather data request.
+
+        Returns:
+            The extracted weather data for the specified type over the specified date range.
+        """
+        # Get the actual start and end dates from the dates list using the provided indices
         start_date = dates[start_date]
         end_date = dates[end_date]
 
+        # Set up the Open-Meteo API client
         client = window._setup_openmeteo_client()
+
+        # Build the request parameters for the API call
         params = window._build_api_params(start_date, end_date, latitude, longitude)
+
+        # Fetch the weather data using the configured client and parameters
         response = window._fetch_weather_data(client, params)
+
+        # Process the daily data retrieved from the API response
         daily_data = window._process_daily_data(response)
 
+        # Extract and return the requested data from the processed daily data
         return window._extract_requested_data(daily_data, data_type_input)
 
     def _setup_openmeteo_client(window):
-        """Set up the Open-Meteo API client with cache and retry on error."""
+        """
+        Set up the Open-Meteo API client with caching and retry mechanism on error.
+
+        This function initializes a session that caches API responses to reduce
+        the number of requests sent to the Open-Meteo API and includes a retry
+        mechanism to handle transient errors.
+
+        Returns:
+            An Open-Meteo API client configured with caching and retry capabilities.
+        """
+        # Create a cached session that stores responses for 1 hour (3600 seconds)
         cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+
+        # Set up a retry session that will attempt up to 5 retries with exponential backoff
         retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+
+        # Return an Open-Meteo client using the configured retry session
         return openmeteo_requests.Client(session=retry_session)
 
     def _build_api_params(window, start_date, end_date, latitude, longitude):
-        """Build the parameters for the API request."""
+        """
+        Build the parameters for the API request to Open-Meteo.
+
+        This function constructs a dictionary of parameters required to make a request
+        to the Open-Meteo API, including geographical coordinates, date range, and
+        desired weather data attributes.
+
+        Args:
+            start_date: The starting date for the weather data request.
+            end_date: The ending date for the weather data request.
+            latitude: The latitude coordinate for the location.
+            longitude: The longitude coordinate for the location.
+
+        Returns:
+            A dictionary containing the parameters for the API request.
+        """
         return {
+            # Geographical coordinates for the weather data request
             "latitude": latitude,
             "longitude": longitude,
+
+            # Date range for the requested weather data
             "start_date": start_date,
             "end_date": end_date,
-            "daily": ["weather_code", "temperature_2m_max", "temperature_2m_min", "precipitation_sum",
-                      "precipitation_probability_max", "wind_speed_10m_max"],
+
+            # List of daily weather data attributes to retrieve
+            "daily": [
+                "weather_code",
+                "temperature_2m_max",
+                "temperature_2m_min",
+                "precipitation_sum",
+                "precipitation_probability_max",
+                "wind_speed_10m_max"
+            ],
+
+            # Set temperature unit based on user preference
             "temperature_unit": "fahrenheit" if window.units_var.get() else "celsius",
+
+            # Set wind speed unit based on user preference
             "wind_speed_unit": "mph" if window.units_var.get() else "kmh",
+
+            # Set precipitation unit based on user preference
             "precipitation_unit": "inch" if window.units_var.get() else "mm"
         }
 
     def _fetch_weather_data(window, client, params):
-        """Fetch weather data from the Open-Meteo API."""
+        """
+        Fetch weather data from the Open-Meteo API.
+
+        This function makes a request to the Open-Meteo API using the specified client
+        and parameters to retrieve weather data.
+
+        Args:
+            client: The Open-Meteo API client used to send the request.
+            params: A dictionary of parameters for the API request.
+
+        Returns:
+            The first response object containing weather data from the API.
+        """
+        # Define the URL endpoint for the historical forecast API
         url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+
+        # Send a request to the Open-Meteo API and retrieve the responses
         responses = client.weather_api(url, params=params)
+
+        # Return the first response from the API
         return responses[0]
 
     def _process_daily_data(window, response):
-        """Process the daily data from the API response."""
+        """
+        Process the daily data from the API response.
+
+        This function extracts daily weather data from the provided API response
+        and organizes it into a dictionary for easier access.
+
+        Args:
+            response: The API response object containing weather data.
+
+        Returns:
+            A dictionary containing processed daily weather data, with keys for
+            various weather attributes and their corresponding values as NumPy arrays.
+        """
+        # Access the daily data section of the API response
         daily = response.Daily()
+
+        # Extract and return daily weather data as a dictionary
         return {
+            # Weather code for the day
             "weather_code": daily.Variables(0).ValuesAsNumpy(),
+
+            # Maximum temperature recorded for the day
             "temperature_2m_max": daily.Variables(1).ValuesAsNumpy(),
+
+            # Minimum temperature recorded for the day
             "temperature_2m_min": daily.Variables(2).ValuesAsNumpy(),
+
+            # Total precipitation for the day
             "precipitation_sum": daily.Variables(3).ValuesAsNumpy(),
+
+            # Maximum probability of precipitation for the day
             "precipitation_probability_max": daily.Variables(4).ValuesAsNumpy(),
+
+            # Maximum wind speed recorded for the day
             "wind_speed_10m_max": daily.Variables(5).ValuesAsNumpy()
         }
 
     def _extract_requested_data(window, daily_data, data_type_input):
-        """Extract the requested data type from the daily data."""
+        """
+        Extract the requested data type from the daily data.
+
+        This function retrieves specific weather data based on the requested data type
+        from the provided daily weather data.
+
+        Args:
+            daily_data: A dictionary containing daily weather data.
+            data_type_input: A string specifying the type of data to extract.
+
+        Returns:
+            The extracted data corresponding to the requested data type.
+        """
+        # Mapping of user-friendly data type names to actual keys in the daily_data dictionary
         data_mapping = {
             "Temp Low": "temperature_2m_min",
             "Temp High": "temperature_2m_max",
@@ -883,15 +1284,50 @@ class App(TKMT.ThemedTKinterFrame):
             "Wind Speed": "wind_speed_10m_max",
             "Weather Code": "weather_code"
         }
+
+        # Return the data corresponding to the requested data type
         return daily_data[data_mapping[data_type_input]]
 
     def write_file(window, input):
+        """
+        Parse input data and assign values to global variables representing weather data.
+
+        This function takes a string input containing weather data in key-value pairs,
+        splits it into relevant components, and assigns the parsed values to global variables.
+        Additionally, it updates dropdown values in the user interface with the parsed dates.
+
+        Args:
+            input (str): Data input in the format of key-value pairs separated by ': '
+                         and lines separated by '\n'. Keys include 'date', 'weather_code',
+                         'temperature_max', 'temperature_min', 'precipitation_sum',
+                         'wind_speed_max', 'precipitation_probability_max'.
+
+        Sets global variables:
+            - dates: List of dates parsed from input.
+            - weatherCode: List of weather codes parsed from input.
+            - temperatureMax: List of maximum temperatures parsed from input.
+            - temperatureMin: List of minimum temperatures parsed from input.
+            - precipitationSum: List of precipitation amounts parsed from input.
+            - windSpeedMax: List of maximum wind speeds parsed from input.
+            - precipitationProbabilityMax: List of maximum precipitation probabilities parsed from input.
+
+        Updates combobox values:
+            - histogram_start_date_dropdown, histogram_end_date_dropdown, start_date_dropdown,
+              end_date_dropdown: Sets their values to the parsed 'dates' list.
+        """
+        # Declare global variables to hold parsed weather data
         global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
+
+        # Split the input string into lines for processing
         lines = input.split('\n')
+
+        # Iterate through each line and parse key-value pairs
         for line in lines:
             parts = line.split(': ')
-            key = parts[0]
-            values = parts[1].split()
+            key = parts[0]  # The key (e.g., 'date', 'temperature_max')
+            values = parts[1].split()  # The associated values split into a list
+
+            # Assign values to corresponding global variables based on the key
             if key == 'date':
                 dates = values
             elif key == 'weather_code':
@@ -907,40 +1343,43 @@ class App(TKMT.ThemedTKinterFrame):
             elif key == 'precipitation_probability_max':
                 precipitationProbabilityMax = values
 
+        # Update dropdown values in the window based on the parsed dates
         window.root.histogram_start_date_dropdown['values'] = dates
         window.root.histogram_end_date_dropdown['values'] = dates
         window.root.start_date_dropdown['values'] = dates
+
+        # Optionally update end_date_dropdown if it exists
         if hasattr(window, 'end_date_dropdown'):
             window.end_date_dropdown['values'] = dates
 
-
     def quitapp(window):
+        """
+        Terminate running processes and close the application.
 
+        This function attempts to terminate each process in the `processes` list
+        and handles any exceptions that may arise during the termination process.
+        If a process cannot be terminated due to access issues, an error message
+        is printed to the console.
+        """
+        # Iterate through each process in the processes list
         for proc in processes:
             try:
                 proc.terminate()  # Attempt to terminate the process
             except (psutil.NoSuchProcess, psutil.AccessDenied):
+                # Handle exceptions for processes that cannot be terminated
                 print(f"Failed to terminate {proc.info['name']} with PID {proc.info['pid']}. Access Denied.")
 
-        # window.quit()
-        # window.destroy()
-        # sys.exit(0000)
-def run_app():
-    app = App("Sun-valley", "light")
-    app.root.mainloop()
+        window.root.destroy()  # Close the application window
 
     # REST API routes
     @flask_app.route('/weather', methods=['GET'])
-    def get_weather():
+    def get_weather(self):
         """
         Get weather data for a specified date range and data type.
 
         This method retrieves weather data based on the provided start date, end date,
         and data type. If any of the required parameters are missing or the date range
         is invalid, it returns an error message.
-
-        Args:
-            None
 
         Returns:
             json: Weather data for the specified date range and data type, or an error message.
@@ -954,7 +1393,7 @@ def run_app():
         if not start_date or not end_date or not data_type:
             return jsonify({"error": "Missing required parameters"}), 400
 
-        # Validate the date range
+        # Validate the date range by checking indices
         try:
             start_index = dates.index(start_date)
             end_index = dates.index(end_date) + 1
@@ -972,15 +1411,16 @@ def run_app():
         }.get(data_type)
 
         # Check if the data type is valid
-        if not data:
+        if data is None:
             return jsonify({"error": "Invalid data type"}), 400
 
         # Generate the result dictionary for the specified date range
         result = {dates[i]: data[i] for i in range(start_index, end_index)}
+
         return jsonify(result)
 
     @flask_app.route('/weather', methods=['POST'])
-    def add_weather():
+    def add_weather(self):
         """
         Add new weather data.
 
@@ -988,20 +1428,20 @@ def run_app():
         include a date, and the date must not already exist in the data. If the
         data format is invalid or the date already exists, it returns an error message.
 
-        Args:
-            None
-
         Returns:
             json: Success message or an error message.
         """
         # Retrieve the new data from the request body
         new_data = request.json
+
+        # Validate the incoming data
         if not new_data or 'date' not in new_data:
             return jsonify({"error": "Invalid data format"}), 400
 
         # Extract the date from the new data
         date = new_data['date']
-        # Check if the date already exists
+
+        # Check if the date already exists in the dates list
         if date in dates:
             return jsonify({"error": "Date already exists"}), 400
 
@@ -1014,11 +1454,13 @@ def run_app():
         windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
         precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
 
+        # Update the API to reflect the newly added data
         app.update_api()
+
         return jsonify({"message": "Data added successfully"}), 201
 
     @flask_app.route('/weather', methods=['PUT'])
-    def update_weather():
+    def update_weather(self):
         """
         Update existing weather data.
 
@@ -1026,14 +1468,13 @@ def run_app():
         include the date, data point, and the new value. If the data format is invalid
         or the date is not found, it returns an error message.
 
-        Args:
-            None
-
         Returns:
             json: Success message or an error message.
         """
         # Retrieve the update information from the request body
         update_info = request.json
+
+        # Validate the incoming update format
         if not update_info or 'date' not in update_info or 'data_point' not in update_info or 'value' not in update_info:
             return jsonify({"error": "Invalid update format"}), 400
 
@@ -1042,13 +1483,14 @@ def run_app():
         data_point = update_info['data_point']
         value = update_info['value']
 
-        # Check if the date exists
+        # Check if the date exists in the dates list
         if date not in dates:
             return jsonify({"error": "Date not found"}), 404
 
-        # Get the index of the date
+        # Get the index of the date for updating
         index = dates.index(date)
-        # Update the corresponding data point
+
+        # Update the corresponding data point based on the specified data point
         if data_point == 'Weather Code':
             weatherCode[index] = str(value)
         elif data_point == 'Temp Low':
@@ -1064,35 +1506,37 @@ def run_app():
         else:
             return jsonify({"error": "Invalid data point"}), 400
 
+        # Update the API to reflect the changes made
         app.update_api()
+
         return jsonify({"message": "Data updated successfully"})
 
     @flask_app.route('/weather', methods=['DELETE'])
-    def delete_weather():
+    def delete_weather(self):
         """
         Delete weather data for a specific date.
 
         This method deletes weather data for a given date. The date must be provided
         as a query parameter. If the date is not found, it returns an error message.
 
-        Args:
-            None
-
         Returns:
             json: Success message or an error message.
         """
         # Retrieve the date from the query parameters
         date = request.args.get('date')
+
+        # Validate the presence of the date parameter
         if not date:
             return jsonify({"error": "Date parameter is required"}), 400
 
-        # Check if the date exists
+        # Check if the specified date exists in the dates list
         if date not in dates:
             return jsonify({"error": "Date not found"}), 404
 
-        # Get the index of the date
+        # Get the index of the date for removal
         index = dates.index(date)
-        # Remove the data for the specified date
+
+        # Remove the data for the specified date from all corresponding lists
         dates.pop(index)
         weatherCode.pop(index)
         temperatureMax.pop(index)
@@ -1101,48 +1545,33 @@ def run_app():
         windSpeedMax.pop(index)
         precipitationProbabilityMax.pop(index)
 
+        # Update the API to reflect the changes made
         app.update_api()
+
         return jsonify({"message": "Data deleted successfully"})
 
     @flask_app.route('/')
-    def home():
+    def home(self):
         """
         Home route.
 
         This method returns a simple message for the home route of the Flask app.
-
-        Args:
-            None
 
         Returns:
             str: A message indicating the landing page for the weather app.
         """
         return "this is the local host landing page for the weather app"
 
-    def run_flask():
-        """
-        Run the Flask app.
-
-        This method starts the Flask application with debugging enabled and without
-        the reloader.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        flask_app.run(debug=True, use_reloader=False)
-
 if __name__ == "__main__":
+    # Retrieve a list of currently running Python processes
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
+    # Initialize the main application with a title and theme
     app = App("Sun-valley", "light")
 
-    # Start the Flask app in a separate thread
+    # Start the Flask app in a separate thread to prevent blocking the Tkinter main loop
     flask_thread = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
     flask_thread.start()
 
-    print("Escaped FLASK")
-
+    # Start the Tkinter event loop
     app.root.mainloop()
