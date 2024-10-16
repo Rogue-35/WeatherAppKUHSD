@@ -36,12 +36,12 @@ flask_app = Flask(__name__)
 
 # Global variables to store weather data
 dates = []
-weather_code = []
-temperature_maximum = []
-temperature_minimum = []
-precipitation_sum = []
-wind_speed_maximum = []
-precipitation_probability_max = []
+weatherCode = []
+temperatureMax = []
+temperatureMin = []
+precipitationSum = []
+windSpeedMax = []
+precipitationProbabilityMax = []
 
 class App(TKMT.ThemedTKinterFrame):
     # lookup table for weather code
@@ -184,7 +184,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.data_type_list = ['Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                  'Precipitation Probability']
         window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
-                                          'Precipitation Probability']  # For histogram
+                                          'Precipitation Probability'] # for histogram
         window.data_cat = ['Max', 'Min', 'Mean', 'Single']  # Options for how to display data (Max, Min, Average, Single value)
 
         window.precision_slider_stored = 4  # Default value for decimal precision
@@ -199,28 +199,28 @@ class App(TKMT.ThemedTKinterFrame):
         """
 
         # Header frame for upload and close buttons
-        window.root.HeaderFrame = ttk.Frame(window.root, padding=(20, 10))
-        window.root.HeaderFrame.grid(row=0, column=0, sticky="EW")
+        window.root.header_frame = ttk.Frame(window.root, padding=(20, 10))
+        window.root.header_frame.grid(row=0, column=0, sticky="EW")
 
         # Upload Button to select input file
-        window.root.UploadButton = ttk.Button(window.root.HeaderFrame, text="Upload Input File",
+        window.root.upload_button = ttk.Button(window.root.header_frame, text="Upload Input File",
                                                command=window.upload_file)
-        window.root.UploadButton.grid(row=0, column=0, padx=5, pady=5)
+        window.root.upload_button.grid(row=0, column=0, padx=5, pady=5)
 
         # Close Button to close the application
-        window.root.CloseButton = ttk.Button(window.root.HeaderFrame, text="Close", command=window.quitapp)
-        window.root.CloseButton.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
+        window.root.close_button = ttk.Button(window.root.header_frame, text="Close", command=window.quitapp)
+        window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
 
         # Body frame for the notebook widget (tabbed interface)
-        window.root.BodyFrame = ttk.Frame(window.root)
+        window.root.body_frame = ttk.Frame(window.root)
 
         # Settings Button to open the settings window
-        window.root.SettingsButton = ttk.Button(window.root.HeaderFrame, text="Settings",
+        window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings",
                                                  command=window.settings_window)
-        window.root.SettingsButton.grid(row=0, column=1, padx=5, pady=5)
+        window.root.settings_button.grid(row=0, column=1, padx=5, pady=5)
 
         # Notebook widget for adding tabs
-        window.root.notebook = ttk.Notebook(window.root.BodyFrame)
+        window.root.notebook = ttk.Notebook(window.root.body_frame)
 
         # Tab #1: Data Output Tab
         window.root.tab_1 = ttk.Frame(window.root.notebook)
@@ -718,14 +718,14 @@ class App(TKMT.ThemedTKinterFrame):
         if not unit_type:  # Converting from Imperial to Metric
             for i in range(len(dates)):
                 # Convert temperature from Fahrenheit to Celsius
-                temperature_maximum[i] = (float(temperature_maximum[i]) - 32) * 5 / 9
-                temperature_minimum[i] = (float(temperature_minimum[i]) - 32) * 5 / 9
+                temperatureMax[i] = (float(temperatureMax[i]) - 32) * 5 / 9
+                temperatureMin[i] = (float(temperatureMin[i]) - 32) * 5 / 9
 
                 # Convert precipitation from inches to millimeters
-                precipitation_sum[i] = float(precipitation_sum[i]) * 25.4
+                precipitationSum[i] = float(precipitationSum[i]) * 25.4
 
                 # Convert wind speed from miles per hour to kilometers per hour
-                wind_speed_maximum[i] = float(wind_speed_maximum[i]) * 1.60934
+                windSpeedMax[i] = float(windSpeedMax[i]) * 1.60934
 
             # Update the last unit type to reflect the current setting
             window.last_unit_type = False
@@ -733,14 +733,14 @@ class App(TKMT.ThemedTKinterFrame):
         else:  # Converting from Metric to Imperial
             for i in range(len(dates)):
                 # Convert temperature from Celsius to Fahrenheit
-                temperature_maximum[i] = (float(temperature_maximum[i]) * 9 / 5) + 32
-                temperature_minimum[i] = (float(temperature_minimum[i]) * 9 / 5) + 32
+                temperatureMax[i] = (float(temperatureMax[i]) * 9 / 5) + 32
+                temperatureMin[i] = (float(temperatureMin[i]) * 9 / 5) + 32
 
                 # Convert precipitation from millimeters to inches
-                precipitation_sum[i] = float(precipitation_sum[i]) / 25.4
+                precipitationSum[i] = float(precipitationSum[i]) / 25.4
 
                 # Convert wind speed from kilometers per hour to miles per hour
-                wind_speed_maximum[i] = float(wind_speed_maximum[i]) / 1.60934
+                windSpeedMax[i] = float(windSpeedMax[i]) / 1.60934
 
             # Update the last unit type to reflect the current setting
             window.last_unit_type = True
@@ -761,7 +761,7 @@ class App(TKMT.ThemedTKinterFrame):
             index = dates.index(selected_date)
 
             # Retrieve the weather code associated with the selected date
-            weather_code = int(float(weather_code[index]))
+            weather_code = int(float(weatherCode[index]))
 
             # Call the openMeteoSetup method to get the real weather code
             weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
@@ -779,7 +779,7 @@ class App(TKMT.ThemedTKinterFrame):
         and sets the output text accordingly.
 
         Args:
-            data_type: The type of data being retrieved (e.g., temperature_minimum, precipitation).
+            data_type: The type of data being retrieved (e.g., temperaturemin, precipitation).
         """
         # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
@@ -809,7 +809,7 @@ class App(TKMT.ThemedTKinterFrame):
         and data type, and sets the output text accordingly.
 
         Args:
-            data_type: The type of data being retrieved (e.g., temperature_minimum, precipitation).
+            data_type: The type of data being retrieved (e.g., temperaturemin, precipitation).
             category: The type of aggregation to perform (e.g., mean, max, min).
         """
         # Get the indices for the start and end dates from the dropdowns
@@ -851,12 +851,12 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Define a mapping of data types to their corresponding data lists
         data_mapping = {
-            "Temp Low": (temperature_minimum),  # Maps "Temp Low" to the temperature_minimum data
-            "Temp High": (temperature_maximum),  # Maps "Temp High" to the temperature_maximum data
-            "Precipitation Amount": (precipitation_sum),  # Maps "Precipitation Amount" to the precipitation_sum data
-            "Wind Speed": (wind_speed_maximum),  # Maps "Wind Speed" to the wind_speed_maximum data
-            "Precipitation Probability": (precipitation_probability_max)
-            # Maps "Precipitation Probability" to the precipitation_probability_max data
+            "Temp Low": (temperatureMin),  # Maps "Temp Low" to the temperatureMin data
+            "Temp High": (temperatureMax),  # Maps "Temp High" to the temperatureMax data
+            "Precipitation Amount": (precipitationSum),  # Maps "Precipitation Amount" to the precipitationSum data
+            "Wind Speed": (windSpeedMax),  # Maps "Wind Speed" to the windSpeedMax data
+            "Precipitation Probability": (precipitationProbabilityMax)
+            # Maps "Precipitation Probability" to the precipitationProbabilityMax data
         }
 
         # Retrieve the list of data corresponding to the specified data type
@@ -880,11 +880,11 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Define a mapping of data types to their corresponding data lists and return the relevant list
         return {
-            "Temp Low": temperature_minimum,  # List of minimum temperature values
-            "Temp High": temperature_maximum,  # List of maximum temperature values
-            "Precipitation Amount": precipitation_sum,  # List of total precipitation values
-            "Wind Speed": wind_speed_maximum,  # List of maximum wind speed values
-            "Precipitation Probability": precipitation_probability_max  # List of precipitation probabilities
+            "Temp Low": temperatureMin,  # List of minimum temperature values
+            "Temp High": temperatureMax,  # List of maximum temperature values
+            "Precipitation Amount": precipitationSum,  # List of total precipitation values
+            "Wind Speed": windSpeedMax,  # List of maximum wind speed values
+            "Precipitation Probability": precipitationProbabilityMax  # List of precipitation probabilities
         }[data_type]
 
     def calculate_aggregate(window, data_list, start, end, category):
@@ -938,19 +938,19 @@ class App(TKMT.ThemedTKinterFrame):
 
         Sets global variables:
             - dates: List of dates parsed from input.
-            - weather_code: List of weather codes parsed from input.
-            - temperature_maximum: List of maximum temperatures parsed from input.
-            - temperature_minimum: List of minimum temperatures parsed from input.
-            - precipitation_sum: List of precipitation amounts parsed from input.
-            - wind_speed_maximum: List of maximum wind speeds parsed from input.
-            - precipitation_probability_max: List of maximum precipitation probabilities parsed from input.
+            - weatherCode: List of weather codes parsed from input.
+            - temperatureMax: List of maximum temperatures parsed from input.
+            - temperatureMin: List of minimum temperatures parsed from input.
+            - precipitationSum: List of precipitation amounts parsed from input.
+            - windSpeedMax: List of maximum wind speeds parsed from input.
+            - precipitationProbabilityMax: List of maximum precipitation probabilities parsed from input.
 
         Updates combobox values:
             - histogram_start_date_dropdown, histogram_end_date_dropdown, start_date_dropdown, end_date_dropdown:
               Sets their values to the parsed 'dates' list.
         """
         # Declare global variables to hold parsed weather data
-        global dates, weather_code, temperature_maximum, temperature_minimum, precipitation_sum, wind_speed_maximum, precipitation_probability_max
+        global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
 
         # Split the input data into lines
         lines = input.split('\n')
@@ -965,17 +965,17 @@ class App(TKMT.ThemedTKinterFrame):
             if key == 'date':
                 dates = values
             elif key == 'weather_code':
-                weather_code = values
+                weatherCode = values
             elif key == 'temperature_max':
-                temperature_maximum = values
+                temperatureMax = values
             elif key == 'temperature_min':
-                temperature_minimum = values
+                temperatureMin = values
             elif key == 'precipitation_sum':
-                precipitation_sum = values
+                precipitationSum = values
             elif key == 'wind_speed_max':
-                wind_speed_maximum = values
+                windSpeedMax = values
             elif key == 'precipitation_probability_max':
-                precipitation_probability_max = values
+                precipitationProbabilityMax = values
 
         # Update the dropdown values in the GUI with the parsed dates
         window.root.histogram_start_date_dropdown['values'] = dates
@@ -1022,8 +1022,8 @@ class App(TKMT.ThemedTKinterFrame):
                 messagebox.showerror(title='Error', message='File Read Error')
 
         # Update the layout of the window after file upload
-        window.root.CloseButton.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
-        window.root.BodyFrame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
+        window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
         window.root.notebook.pack(fill="both", expand=True)
 
     def plot_histogram(window, event):
@@ -1057,11 +1057,11 @@ class App(TKMT.ThemedTKinterFrame):
             if start_index < end_index:
                 # Retrieve the corresponding data for the selected data type
                 data = {
-                    'Temp Low': temperature_minimum[start_index:end_index],
-                    'Temp High': temperature_maximum[start_index:end_index],
-                    'Precipitation Amount': precipitation_sum[start_index:end_index],
-                    'Wind Speed': wind_speed_maximum[start_index:end_index],
-                    'Precipitation Probability': precipitation_probability_max[start_index:end_index]
+                    'Temp Low': temperatureMin[start_index:end_index],
+                    'Temp High': temperatureMax[start_index:end_index],
+                    'Precipitation Amount': precipitationSum[start_index:end_index],
+                    'Wind Speed': windSpeedMax[start_index:end_index],
+                    'Precipitation Probability': precipitationProbabilityMax[start_index:end_index]
                 }[data_type]
 
                 # Convert data to float for plotting
@@ -1304,19 +1304,19 @@ class App(TKMT.ThemedTKinterFrame):
 
         Sets global variables:
             - dates: List of dates parsed from input.
-            - weather_code: List of weather codes parsed from input.
-            - temperature_maximum: List of maximum temperatures parsed from input.
-            - temperature_minimum: List of minimum temperatures parsed from input.
-            - precipitation_sum: List of precipitation amounts parsed from input.
-            - wind_speed_maximum: List of maximum wind speeds parsed from input.
-            - precipitation_probability_max: List of maximum precipitation probabilities parsed from input.
+            - weatherCode: List of weather codes parsed from input.
+            - temperatureMax: List of maximum temperatures parsed from input.
+            - temperatureMin: List of minimum temperatures parsed from input.
+            - precipitationSum: List of precipitation amounts parsed from input.
+            - windSpeedMax: List of maximum wind speeds parsed from input.
+            - precipitationProbabilityMax: List of maximum precipitation probabilities parsed from input.
 
         Updates combobox values:
             - histogram_start_date_dropdown, histogram_end_date_dropdown, start_date_dropdown,
               end_date_dropdown: Sets their values to the parsed 'dates' list.
         """
         # Declare global variables to hold parsed weather data
-        global dates, weather_code, temperature_maximum, temperature_minimum, precipitation_sum, wind_speed_maximum, precipitation_probability_max
+        global dates, weatherCode, temperatureMax, temperatureMin, precipitationSum, windSpeedMax, precipitationProbabilityMax
 
         # Split the input string into lines for processing
         lines = input.split('\n')
@@ -1331,17 +1331,17 @@ class App(TKMT.ThemedTKinterFrame):
             if key == 'date':
                 dates = values
             elif key == 'weather_code':
-                weather_code = values
+                weatherCode = values
             elif key == 'temperature_max':
-                temperature_maximum = values
+                temperatureMax = values
             elif key == 'temperature_min':
-                temperature_minimum = values
+                temperatureMin = values
             elif key == 'precipitation_sum':
-                precipitation_sum = values
+                precipitationSum = values
             elif key == 'wind_speed_max':
-                wind_speed_maximum = values
+                windSpeedMax = values
             elif key == 'precipitation_probability_max':
-                precipitation_probability_max = values
+                precipitationProbabilityMax = values
 
         # Update dropdown values in the window based on the parsed dates
         window.root.histogram_start_date_dropdown['values'] = dates
@@ -1402,12 +1402,12 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Map the data type to the corresponding data list
         data = {
-            'Weather Code': weather_code,
-            'Temp Low': temperature_minimum,
-            'Temp High': temperature_maximum,
-            'Precipitation Amount': precipitation_sum,
-            'Wind Speed': wind_speed_maximum,
-            'Precipitation Probability': precipitation_probability_max
+            'Weather Code': weatherCode,
+            'Temp Low': temperatureMin,
+            'Temp High': temperatureMax,
+            'Precipitation Amount': precipitationSum,
+            'Wind Speed': windSpeedMax,
+            'Precipitation Probability': precipitationProbabilityMax
         }.get(data_type)
 
         # Check if the data type is valid
@@ -1447,12 +1447,12 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Append the new data to the corresponding lists
         dates.append(date)
-        weather_code.append(str(new_data.get('weather_code', '')))
-        temperature_maximum.append(str(new_data.get('temperature_max', '')))
-        temperature_minimum.append(str(new_data.get('temperature_min', '')))
-        precipitation_sum.append(str(new_data.get('precipitation_sum', '')))
-        wind_speed_maximum.append(str(new_data.get('wind_speed_max', '')))
-        precipitation_probability_max.append(str(new_data.get('precipitation_probability_max', '')))
+        weatherCode.append(str(new_data.get('weather_code', '')))
+        temperatureMax.append(str(new_data.get('temperature_max', '')))
+        temperatureMin.append(str(new_data.get('temperature_min', '')))
+        precipitationSum.append(str(new_data.get('precipitation_sum', '')))
+        windSpeedMax.append(str(new_data.get('wind_speed_max', '')))
+        precipitationProbabilityMax.append(str(new_data.get('precipitation_probability_max', '')))
 
         # Update the API to reflect the newly added data
         app.update_api()
@@ -1492,17 +1492,17 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Update the corresponding data point based on the specified data point
         if data_point == 'Weather Code':
-            weather_code[index] = str(value)
+            weatherCode[index] = str(value)
         elif data_point == 'Temp Low':
-            temperature_minimum[index] = str(value)
+            temperatureMin[index] = str(value)
         elif data_point == 'Temp High':
-            temperature_maximum[index] = str(value)
+            temperatureMax[index] = str(value)
         elif data_point == 'Precipitation Amount':
-            precipitation_sum[index] = str(value)
+            precipitationSum[index] = str(value)
         elif data_point == 'Wind Speed':
-            wind_speed_maximum[index] = str(value)
+            windSpeedMax[index] = str(value)
         elif data_point == 'Precipitation Probability':
-            precipitation_probability_max[index] = str(value)
+            precipitationProbabilityMax[index] = str(value)
         else:
             return jsonify({"error": "Invalid data point"}), 400
 
@@ -1538,12 +1538,12 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Remove the data for the specified date from all corresponding lists
         dates.pop(index)
-        weather_code.pop(index)
-        temperature_maximum.pop(index)
-        temperature_minimum.pop(index)
-        precipitation_sum.pop(index)
-        wind_speed_maximum.pop(index)
-        precipitation_probability_max.pop(index)
+        weatherCode.pop(index)
+        temperatureMax.pop(index)
+        temperatureMin.pop(index)
+        precipitationSum.pop(index)
+        windSpeedMax.pop(index)
+        precipitationProbabilityMax.pop(index)
 
         # Update the API to reflect the changes made
         app.update_api()
