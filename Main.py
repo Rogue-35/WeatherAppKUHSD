@@ -147,7 +147,7 @@ class App(TKMT.ThemedTKinterFrame):
              'Thunderstorm, heavy, with hail (Hail, small hail, snow pellets) at time of observation'
              ]
 
-    # variables for setting the location
+    # Variables for setting the location
     latitude_set = 0
     longitude_set = 0
 
@@ -170,7 +170,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.open = False  # Flag to track if the settings window is open
         window.theme = theme  # Store the theme
 
-        window.root.iconbitmap("Icons/cloud_icon.ico")  # Set the application icon
+        window.root.iconbitmap("Icons/weathericonNEW.ico")  # Set the application icon
 
         window.theme_var = tk.BooleanVar(value=False)  # Variable to track theme preference (False for default theme)
         window.units_var = tk.BooleanVar(value=True)  # Variable to track unit preference (False for Metric, True for Imperial)
@@ -384,7 +384,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_popup.geometry("400x400")
 
         # Set the icon for the settings window
-        window.root.settings_popup.iconbitmap("Icons/settings.ico")
+        window.root.settings_popup.iconbitmap("Icons/settingsiconNEW.ico")
 
         # Configure grid columns and rows to allow resizing within the window
         window.root.settings_popup.grid_columnconfigure(0, weight=1)
@@ -576,7 +576,7 @@ class App(TKMT.ThemedTKinterFrame):
             elif data_type == "Precipitation Probability":
                 return "%"  # Percentage for precipitation probability
 
-    #set last units to the starting value
+    # Set last units to the starting value
     last_unit_type = True
 
     def convert_units(window):
@@ -963,7 +963,7 @@ class App(TKMT.ThemedTKinterFrame):
                 ax.set_title(f'{data_type} vs. Time')
                 ax.set_xlabel('Date')
                 ax.title.set_color(text)
-                ax.set_ylabel(f'{data_type} ({window.histogram_units()})', color=text)
+                ax.set_ylabel(f'{data_type} ({window.units()})', color=text)
                 plt.xticks(rotation=30, color=text)
 
                 # Aesthetic improvements for the plot
@@ -1220,20 +1220,21 @@ class App(TKMT.ThemedTKinterFrame):
             values = parts[1].split()  # The associated values split into a list
 
             # Assign values to corresponding global variables based on the key
-            if key == 'date':
-                dates = values
-            elif key == 'weather_code':
-                weatherCode = values
-            elif key == 'temperature_max':
-                temperatureMax = values
-            elif key == 'temperature_min':
-                temperatureMin = values
-            elif key == 'precipitation_sum':
-                precipitationSum = values
-            elif key == 'wind_speed_max':
-                windSpeedMax = values
-            elif key == 'precipitation_probability_max':
-                precipitationProbabilityMax = values
+            match key:
+                case 'date':
+                    dates = values
+                case 'weather_code':
+                    weatherCode = values
+                case 'temperature_max':
+                    temperatureMax = values
+                case 'temperature_min':
+                    temperatureMin = values
+                case 'precipitation_sum':
+                    precipitationSum = values
+                case 'wind_speed_max':
+                    windSpeedMax = values
+                case 'precipitation_probability_max':
+                    precipitationProbabilityMax = values
 
         # Update dropdown values in the window based on the parsed dates
         window.root.start_date_dropdown['values'] = dates
@@ -1381,20 +1382,36 @@ class App(TKMT.ThemedTKinterFrame):
         index = dates.index(date)
 
         # Update the corresponding data point based on the specified data point
-        if data_point == 'Weather Code':
-            weatherCode[index] = str(value)
-        elif data_point == 'Temp Low':
-            temperatureMin[index] = str(value)
-        elif data_point == 'Temp High':
-            temperatureMax[index] = str(value)
-        elif data_point == 'Precipitation Amount':
-            precipitationSum[index] = str(value)
-        elif data_point == 'Wind Speed':
-            windSpeedMax[index] = str(value)
-        elif data_point == 'Precipitation Probability':
-            precipitationProbabilityMax[index] = str(value)
-        else:
-            return jsonify({"error": "Invalid data point"}), 400
+        # if data_point == 'Weather Code':
+        #     weatherCode[index] = str(value)
+        # elif data_point == 'Temp Low':
+        #     temperatureMin[index] = str(value)
+        # elif data_point == 'Temp High':
+        #     temperatureMax[index] = str(value)
+        # elif data_point == 'Precipitation Amount':
+        #     precipitationSum[index] = str(value)
+        # elif data_point == 'Wind Speed':
+        #     windSpeedMax[index] = str(value)
+        # elif data_point == 'Precipitation Probability':
+        #     precipitationProbabilityMax[index] = str(value)
+        # else:
+        #     return jsonify({"error": "Invalid data point"}), 400
+
+        match(data_point):
+            case 'Weather Code':
+                weatherCode[index] = str(value)
+            case 'Temp Low':
+                temperatureMin[index] = str(value)
+            case 'Temp High':
+                temperatureMax[index] = str(value)
+            case 'Precipitation Amount':
+                precipitationSum[index] = str(value)
+            case 'Wind Speed':
+                windSpeedMax[index] = str(value)
+            case 'Precipitation Probability':
+                precipitationProbabilityMax[index] = str(value)
+            case _:
+                return jsonify({"error": "Invalid data point"}), 400
 
         # Update the API to reflect the changes made
         app.update_api()
