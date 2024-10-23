@@ -1,5 +1,3 @@
-print("test")
-
 # This project uses the following open-source libraries:
 # - Tkinter (standard library)
 # - threading (standard library)
@@ -1531,7 +1529,7 @@ if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
     # Initialize the main application with a title and theme
-    app = App("Sun-valley", "dark")
+    app = App("Park", "dark")
 
     # Start the Flask app in a separate thread to prevent blocking the Tkinter main loop
     flask_thread = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
