@@ -1,7 +1,8 @@
+print("test")
+
 # This project uses the following open-source libraries:
 # - Tkinter (standard library)
 # - threading (standard library)
-# - asyncio (standard library)
 # - Matplotlib - https://matplotlib.org/
 # - OpenMeteo - https://pypi.org/project/open-meteo/
 # - openmeteo_requests - https://pypi.org/project/openmeteo-requests/
@@ -16,7 +17,6 @@
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from tkinter.ttk import Checkbutton
 import TKinterModernThemes as TKMT
 import matplotlib.pyplot as plt
 from click import command
@@ -28,8 +28,8 @@ from flask import Flask, jsonify, request
 import threading
 import psutil
 
-#import restApi
-#import data
+# import restApi
+# import data
 
 # Initialize Flask app
 flask_app = Flask(__name__)
@@ -208,11 +208,30 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings",
                                                  command=window.settings_window)
         window.root.settings_button.grid(row=0, column=1, padx=5, pady=5)
+
+        window.root.app_title = ttk.Label(window.root.header_frame, text="Orion Weather App", font=("TkDefaultFont", 22, "bold"))
+        window.root.app_title.grid(row=0, column=3, padx=25, pady=5, sticky="EW")
     def setup_body(window):
         # Body frame for the notebook widget (tabbed interface)
         window.root.body_frame = ttk.Frame(window.root)
 
+
         # Statistics frame within Tab #1 for displaying data
+        window.root.start_date_label = ttk.Label(window.root.body_frame, text="Start Date")
+        window.root.start_date_label.grid(row=0, column=2, padx=5, pady=5)
+
+        window.root.end_date_label = ttk.Label(window.root.body_frame, text="End Date")
+        window.root.end_date_label.grid(row=0, column=3, padx=5, pady=5)
+
+        window.root.data_type_label = ttk.Label(window.root.body_frame, text="Data Type")
+        window.root.data_type_label.grid(row=0, column=1, padx=5, pady=5)
+
+        window.root.end_date_label = ttk.Label(window.root.body_frame, text="Data Category")
+        window.root.end_date_label.grid(row=0, column=0, padx=5, pady=5)
+
+        window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
+        window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
+
         window.root.weather_code_frame = ttk.LabelFrame(window.root.body_frame, text="Output", padding=(20, 10))
         window.root.weather_code_frame.grid(row=4, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
@@ -227,31 +246,36 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.data_dropdown.grid(row=1, column=0, padx=5, pady=5)
         window.root.data_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
 
-        # Data Category Dropdown (hidden by default)
+        # Data Category Dropdown
         window.root.data_cat_dropdown = ttk.Combobox(window.root.body_frame, state="readonly", values=window.data_cat)
         window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
         window.root.data_cat_dropdown.grid(row=1, column=1, padx=5, pady=5)
-        #window.root.data_cat_dropdown.grid_remove()
 
-        # End Date Dropdown (hidden by default)
+        # End Date Dropdown
         window.root.end_date_dropdown = ttk.Combobox(window.root.body_frame, state="readonly")
         window.root.end_date_dropdown.grid(row=1, column=3, padx=5, pady=5)
         window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
-        #window.root.end_date_dropdown.grid_remove()
 
         # Output Text Label to display data
         window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
         window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude Entry Field for user to input latitude
-        window.root.lat = ttk.Entry(window.root.body_frame, width=30)
-        window.root.lat.grid(row=2, column=1, padx=5, pady=5, sticky="NSEW", columnspan=1)
+        window.root.lat = ttk.Entry(window.root.body_frame)
+        window.root.lat.grid(row=2, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
 
         # Longitude Entry Field for user to input longitude
-        window.root.long = ttk.Entry(window.root.body_frame, width=30)
-        window.root.long.grid(row=3, column=1, padx=5, pady=5, sticky="NSEW", columnspan=1)
+        window.root.long = ttk.Entry(window.root.body_frame)
+        window.root.long.grid(row=3, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
 
-        window.root.lat.bind('<0>', window.lat_long_entry)
+        # titles for longitude and latitude boxes
+        window.root.long_title = ttk.Label(window.root.body_frame, text="Longitude")
+        window.root.long_title.grid(row=2, column=0, padx=5, pady=5)
+        window.root.lat_title = ttk.Label(window.root.body_frame, text="Latitude")
+        window.root.lat_title.grid(row=3, column=0, padx=5, pady=5)
+
+        # make the latitude and longitude boxes responsive
+        window.root.lat.bind('<0>', window.lat_long_entry, add="+")
         window.root.lat.bind('<1>', window.lat_long_entry, add="+")
         window.root.lat.bind('<2>', window.lat_long_entry, add="+")
         window.root.lat.bind('<3>', window.lat_long_entry, add="+")
@@ -261,7 +285,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.lat.bind('<7>', window.lat_long_entry, add="+")
         window.root.lat.bind('<8>', window.lat_long_entry, add="+")
         window.root.lat.bind('<9>', window.lat_long_entry, add="+")
-        window.root.long.bind('<0>', window.lat_long_entry)
+        window.root.long.bind('<0>', window.lat_long_entry, add="+")
         window.root.long.bind('<1>', window.lat_long_entry, add="+")
         window.root.long.bind('<2>', window.lat_long_entry, add="+")
         window.root.long.bind('<3>', window.lat_long_entry, add="+")
@@ -351,7 +375,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.precision_slider()
 
         # Call the function to evaluate data based on new settings
-        window.evaluate()
+        window.evaluate(event="none")
 
         # Set the open flag to False, indicating that the settings popup is closed
         window.open = False
@@ -359,12 +383,14 @@ class App(TKMT.ThemedTKinterFrame):
         # Destroy the settings popup window to close it
         window.root.settings_popup.destroy()
 
+        window.canvas.draw()
+
     def settings_window(window):
         """
         Open the settings window where the user can adjust various application preferences.
 
-        This function checks if the settings window is already open to prevent multiple instances. It then creates a popup window
-        where the user can modify settings like dark mode, units, and precision, and choose different styles.
+        This function checks if the settings window is already open to prevent multiple instances. It then creates a
+        popup window where the user can modify settings like dark mode, units, and precision, and choose different styles.
         """
         # Check if the settings window is already open; if yes, do nothing
         if window.open:
@@ -392,7 +418,7 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Create a style for the title label
         title_style = ttk.Style()
-        title_style.configure("Title.TLabel", font=("TkDefaultFont", 16, "bold"))
+        title_style.configure("Title.TLabel", font=("Comic Sans MS", 16, "bold"))
 
         # Create and place the title label
         settings_title = ttk.Label(window.root.settings_popup, text="Settings", style="Title.TLabel")
@@ -403,7 +429,7 @@ class App(TKMT.ThemedTKinterFrame):
         settings_frame.grid(row=1, column=0, padx=20, pady=10, sticky="NSEW")
 
         # Create a switch for toggling dark mode
-        theme_switch = window.ToggleSwitch(settings_frame, text="Dark Mode", variable=window.theme_var,
+        theme_switch = window.ToggleSwitch(settings_frame, text="Light Mode", variable=window.theme_var,
                                            command=window.update_theme)
         theme_switch.grid(row=0, column=0, sticky="W", pady=10)
 
@@ -465,10 +491,14 @@ class App(TKMT.ThemedTKinterFrame):
         should be enabled or light mode should be set. It then updates the application theme accordingly.
         """
         # Set the theme to "dark" if the theme switch is on, otherwise set to "light"
-        window.theme = "dark" if window.theme_var.get() else "light"
+        window.theme = "light" if window.theme_var.get() else "dark"
 
         # Apply the selected theme to the application
         window.root.tk.call("set_theme", window.theme)
+
+        window.plot_histogram()
+        window.root.settings_popup.focus_force()
+
 
     def update_styles(window):
         """
@@ -482,6 +512,7 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Apply the selected style to the application
         window.root.tk.call("set_theme", window.mode)
+
 
     def lat_long_entry(window, event):
         """
@@ -519,6 +550,7 @@ class App(TKMT.ThemedTKinterFrame):
         """
 
         window.root.end_date_dropdown['values'] = dates
+        window.root.start_date_dropdown['values'] = dates
 
         # Convert units if necessary
         window.convert_units()
@@ -554,27 +586,33 @@ class App(TKMT.ThemedTKinterFrame):
         data_type = window.root.data_dropdown.get()
 
         if window.units_var.get():  # True for Imperial Units
-            if data_type == "Weather Code":
-                return  # No units for weather code
-            elif data_type == "Temp High" or data_type == "Temp Low":
-                return "°F"  # Fahrenheit for temperature
-            elif data_type == "Precipitation Amount":
-                return "inches"  # Inches for precipitation
-            elif data_type == "Wind Speed":
-                return "mph"  # Miles per hour for wind speed
-            elif data_type == "Precipitation Probability":
-                return "%"  # Percentage for precipitation probability
+            match data_type:
+                case "Weather Code":
+                    return  # No units for weather code
+                case "Temp High":
+                    return "°F"  # Fahrenheit for temperature
+                case "Temp Low":
+                    return "°F" # Fahrenheit for temperature
+                case "Precipitation Amount":
+                    return "inches"  # Inches for precipitation
+                case "Wind Speed":
+                    return "mph"  # Miles per hour for wind speed
+                case "Precipitation Probability":
+                    return "%"  # Percentage for precipitation probability
         else:  # Metric Units
-            if data_type == "Weather Code":
-                return  # No units for weather code
-            elif data_type == "Temp High" or data_type == "Temp Low":
-                return "°C"  # Celsius for temperature
-            elif data_type == "Precipitation Amount":
-                return "mm"  # Millimeters for precipitation
-            elif data_type == "Wind Speed":
-                return "km/h"  # Kilometers per hour for wind speed
-            elif data_type == "Precipitation Probability":
-                return "%"  # Percentage for precipitation probability
+            match data_type:
+                case "Weather Code":
+                    return  # No units for weather code
+                case "Temp High":
+                    return "°C"  # Celsius for temperature
+                case "Temp Low":
+                    return "°C" # Celsius for temperature
+                case "Precipitation Amount":
+                    return "mm"  # Millimeters for precipitation
+                case "Wind Speed":
+                    return "km/h"  # Kilometers per hour for wind speed
+                case "Precipitation Probability":
+                    return "%"  # Percentage for precipitation probability
 
     # Set last units to the starting value
     last_unit_type = True
@@ -650,7 +688,7 @@ class App(TKMT.ThemedTKinterFrame):
 
             # Set the output text with both the input and real weather codes
             window.set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
-                              f"Real Weather Code: {int(weather_code_real)} - {window.codes[int(weather_code_real)]}")
+                              f"Real Weather Code: {int(weather_code_real[0])} - {window.codes[(int(weather_code_real[0]))]}")
 
     def handle_single_data(window, data_type):
         """
@@ -694,8 +732,14 @@ class App(TKMT.ThemedTKinterFrame):
             category: The type of aggregation to perform (e.g., mean, max, min).
         """
         # Get the indices for the start and end dates from the dropdowns
-        start_date = dates.index(window.root.start_date_dropdown.get())
-        end_date = dates.index(window.root.end_date_dropdown.get())
+        if hasattr(window, "start_date_dropdown"):
+            start_date = dates.index(window.root.start_date_dropdown.get())
+        else:
+            start_date = ''
+        if hasattr(window, "end_date_dropdown"):
+            end_date = dates.index(window.root.end_date_dropdown.get())
+        else:
+            end_date = ''
 
         # Calculate the aggregate input data from the user's input list
         input_data = window.calculate_aggregate(
@@ -732,11 +776,11 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Define a mapping of data types to their corresponding data lists
         data_mapping = {
-            "Temp Low": (temperatureMin),  # Maps "Temp Low" to the temperatureMin data
-            "Temp High": (temperatureMax),  # Maps "Temp High" to the temperatureMax data
-            "Precipitation Amount": (precipitationSum),  # Maps "Precipitation Amount" to the precipitationSum data
-            "Wind Speed": (windSpeedMax),  # Maps "Wind Speed" to the windSpeedMax data
-            "Precipitation Probability": (precipitationProbabilityMax)
+            "Temp Low": temperatureMin,  # Maps "Temp Low" to the temperatureMin data
+            "Temp High": temperatureMax,  # Maps "Temp High" to the temperatureMax data
+            "Precipitation Amount": precipitationSum,  # Maps "Precipitation Amount" to the precipitationSum data
+            "Wind Speed": windSpeedMax,  # Maps "Wind Speed" to the windSpeedMax data
+            "Precipitation Probability": precipitationProbabilityMax
             # Maps "Precipitation Probability" to the precipitationProbabilityMax data
         }
 
@@ -788,12 +832,21 @@ class App(TKMT.ThemedTKinterFrame):
         values = [float(temp) for temp in data_list[start:end + 1]]
 
         # Calculate and return the aggregate value based on the specified category
-        if category == "Mean":
-            return sum(values) / len(values) if values else 0  # Prevent division by zero
-        elif category == "Max":
-            return max(values) if values else float('-inf')  # Return negative infinity if no values
-        elif category == "Min":
-            return min(values) if values else float('inf')  # Return positive infinity if no values
+        match category:
+            case "Mean":
+                return sum(values) / len(values) if values else 0  # Prevent division by zero
+            case "Max":
+                return max(values) if values else float('-inf')  # Return negative infinity if no values
+            case "Min":
+                return min(values) if values else float('inf')  # Return positive infinity if no values
+            case "Mode":
+                if not values:
+                    return 0
+                from collections import Counter
+                counts = Counter(values)
+                max_count = max(counts.values())
+                modes = [values for value, count in counts.items() if count == max_count]
+                return modes[0]
 
     def set_output(window, text):
         """
@@ -842,21 +895,22 @@ class App(TKMT.ThemedTKinterFrame):
             key = parts[0]  # Extract the key from the line
             values = parts[1].split()  # Extract the values and split them into a list
 
-            # Assign values to global variables based on the key
-            if key == 'date':
-                dates = values
-            elif key == 'weather_code':
-                weatherCode = values
-            elif key == 'temperature_max':
-                temperatureMax = values
-            elif key == 'temperature_min':
-                temperatureMin = values
-            elif key == 'precipitation_sum':
-                precipitationSum = values
-            elif key == 'wind_speed_max':
-                windSpeedMax = values
-            elif key == 'precipitation_probability_max':
-                precipitationProbabilityMax = values
+            match(key):
+                case 'date':
+                    dates = values
+                case 'weather_code':
+                    weatherCode = values
+                case 'temperature_max':
+                    temperatureMax = values
+                case  'temperature_min':
+                    temperatureMin = values
+                case 'precipitation_sum':
+                    precipitationSum = values
+                case 'wind_speed_max':
+                    windSpeedMax = values
+                case 'precipitation_probability_max':
+                    precipitationProbabilityMax = values
+
 
         # Update the dropdown values in the GUI with the parsed dates
         window.root.start_date_dropdown['values'] = dates
@@ -903,17 +957,17 @@ class App(TKMT.ThemedTKinterFrame):
         # Update the layout of the window after file upload
         window.root.close_button.grid(row=0, column=2, padx=5, pady=5, sticky='NSE')
         window.root.body_frame.grid(row=1, column=0, padx=10, pady=10, sticky="NSEW")
-        window.root.notebook.pack(fill="both", expand=True)
+        # window.root.notebook.pack(fill="both", expand=True)
 
     def plot_histogram(window):
         """
-        Plot a histogram based on selected data type and date range.
+        Plot a bar chart based on selected data type and date range.
 
-        Retrieves the data type, start date, and end date from dropdowns. Constructs a histogram
+        Retrieves the data type, start date, and end date from dropdowns. Constructs a bar chart
         using matplotlib based on the selected data type and the corresponding data from
         the start date to the end date.
 
-        Clears the previous plot if it exists and updates the canvas with the new histogram.
+        Clears the previous plot if it exists and updates the canvas with the new chart.
         """
         # Get the selected data type, start date, and end date from the dropdowns
         data_type = window.root.data_dropdown.get()
@@ -943,28 +997,41 @@ class App(TKMT.ThemedTKinterFrame):
 
                 # Convert data to float for plotting
                 data = [float(d) for d in data]
+                plot_dates = dates[start_index:end_index]
 
-                if window.mode  == "dark":
+                # Set color scheme based on mode
+                background = '#1c1c1c'
+                graph = '#363636'
+                text = '#d1d1d1'
+                grid = '#787878'
+                bar_color = '#64b5f6'
+
+                #window.update_styles()
+                if window.theme == "dark":
                     background = '#1c1c1c'
                     graph = '#363636'
                     text = '#d1d1d1'
                     grid = '#787878'
-                    print("dark")
-                if window.mode == "light":
+                    bar_color = '#64b5f6'
+                if window.theme == "light":
                     background = '#fafafa'
                     graph = '#f9f9f9'
                     text = '#212121'
                     grid = '#c2c2c2'
-                    print("light")
 
-                # Create a new figure and axis for the histogram
+                # Create a new figure and axis for the bar plot
                 fig, ax = plt.subplots(facecolor=background)
-                ax.plot(dates[start_index:end_index], data, marker="D")
-                ax.set_title(f'{data_type} vs. Time')
+
+                # Create bar plot with customized appearance
+                bars = ax.bar(plot_dates, data, color=bar_color, alpha=0.7, edgecolor=text)
+
+                ax.set_title(f'{data_type} Over Time')
                 ax.set_xlabel('Date')
+                ax.set_ylabel(f'{data_type} ({window.units()})')
                 ax.title.set_color(text)
-                ax.set_ylabel(f'{data_type} ({window.units()})', color=text)
-                plt.xticks(rotation=30, color=text)
+
+                # Rotate x-axis labels for better readability
+                plt.xticks(rotation=45, ha='right')
 
                 # Aesthetic improvements for the plot
                 ax.spines['top'].set_visible(False)
@@ -976,15 +1043,16 @@ class App(TKMT.ThemedTKinterFrame):
                 ax.set_facecolor(color=graph)
                 ax.xaxis.label.set_color(color=text)
                 ax.yaxis.label.set_color(color=text)
+                plt.xticks(color=text)
+                plt.yticks(color=text)
 
                 # Optimize layout to fit elements nicely
                 fig.tight_layout()
 
-                # Clear the previous plot if it exists
-                if window.root.canvas:
-                    window.root.canvas.get_tk_widget().destroy()
+                # Clear the previous plot
+                plt.close()
 
-                # Create a new canvas to display the histogram
+                # Create a new canvas to display the bar plot
                 window.canvas = FigureCanvasTkAgg(fig, master=window.root.body_frame)
                 window.canvas.draw()
                 window.canvas.get_tk_widget().grid(row=2, column=3, columnspan=2, rowspan=2, pady=10, padx=10)
@@ -1217,7 +1285,12 @@ class App(TKMT.ThemedTKinterFrame):
         for line in lines:
             parts = line.split(': ')
             key = parts[0]  # The key (e.g., 'date', 'temperature_max')
-            values = parts[1].split()  # The associated values split into a list
+            try:
+                if parts[1] == 0:
+                    break
+            except IndexError:
+                return
+            values = parts[1].split()  # The associated values split into a list - errors
 
             # Assign values to corresponding global variables based on the key
             match key:
@@ -1237,10 +1310,9 @@ class App(TKMT.ThemedTKinterFrame):
                     precipitationProbabilityMax = values
 
         # Update dropdown values in the window based on the parsed dates
-        window.root.start_date_dropdown['values'] = dates
-
-        # Optionally update end_date_dropdown if it exists
-        if hasattr(window, 'end_date_dropdown'):
+        if hasattr(window, "start_date_dropdown"):
+            window.root.start_date_dropdown['values'] = dates
+        if hasattr(window, "end_date_dropdown"):
             window.end_date_dropdown['values'] = dates
 
     def quitapp(window):
@@ -1382,21 +1454,6 @@ class App(TKMT.ThemedTKinterFrame):
         index = dates.index(date)
 
         # Update the corresponding data point based on the specified data point
-        # if data_point == 'Weather Code':
-        #     weatherCode[index] = str(value)
-        # elif data_point == 'Temp Low':
-        #     temperatureMin[index] = str(value)
-        # elif data_point == 'Temp High':
-        #     temperatureMax[index] = str(value)
-        # elif data_point == 'Precipitation Amount':
-        #     precipitationSum[index] = str(value)
-        # elif data_point == 'Wind Speed':
-        #     windSpeedMax[index] = str(value)
-        # elif data_point == 'Precipitation Probability':
-        #     precipitationProbabilityMax[index] = str(value)
-        # else:
-        #     return jsonify({"error": "Invalid data point"}), 400
-
         match(data_point):
             case 'Weather Code':
                 weatherCode[index] = str(value)
@@ -1474,7 +1531,7 @@ if __name__ == "__main__":
     processes = [proc for proc in psutil.process_iter(['pid', 'name']) if 'python.exe' in proc.info['name']]
 
     # Initialize the main application with a title and theme
-    app = App("Sun-valley", "light")
+    app = App("Sun-valley", "dark")
 
     # Start the Flask app in a separate thread to prevent blocking the Tkinter main loop
     flask_thread = threading.Thread(target=flask_app.run, kwargs={'debug': True, 'use_reloader': False})
