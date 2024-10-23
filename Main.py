@@ -237,6 +237,15 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.end_date_label = ttk.Label(window.root.input_frame, text="Data Category")
         window.root.end_date_label.grid(row=0, column=0, padx=5, pady=5)
 
+        window.root.output_frame = ttk.Frame(window.root.body_frame)
+        window.root.output_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
+
+        # window.root.weather_code_frame_one = ttk.LabelFrame(window.root.output_frame, text="Output 1", padding=(10, 10))
+        # window.root.weather_code_frame_one.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', columnspan=3)
+
+        # window.root.weather_code_frame_two = ttk.LabelFrame(window.root.output_frame, text="Output 2", padding=(10, 10))
+        # window.root.weather_code_frame_two.grid(row=0, column=3, padx=10, pady=10, sticky='NSEW', columnspan=3)
+
         # Start Date Dropdown for selecting the start date
         window.root.start_date_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
         window.root.start_date_dropdown.grid(row=1, column=2, padx=5, pady=5, sticky="W")
@@ -301,6 +310,26 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.long.bind('<7>', window.lat_long_entry, add="+")
         window.root.long.bind('<8>', window.lat_long_entry, add="+")
         window.root.long.bind('<9>', window.lat_long_entry, add="+")
+
+        window.root.output_text_label = ttk.Label(window.root.output_frame, text="Output 1", font=("Arial", 24))
+        window.root.output_text_label.grid(row=2, column=0, padx=5, pady=5)
+
+        window.root.graph_label = ttk.Label(window.root.output_frame, text="Histrogram 1", font=("Arial", 24))
+        window.root.graph_label.grid(row=0, column=0, padx=5, pady=5, rowspan=2)
+
+        # Output Text Label to display data
+        window.root.output_text = ttk.Label(window.root.output_frame, text='Neil Mcleod', wraplength=675)
+        window.root.output_text.grid(row=3, column=0, padx=5, pady=5)
+
+        window.root.graph_label2 = ttk.Label(window.root.output_frame, text="Histogram 2", font=("Arial", 24))
+        window.root.graph_label2.grid(row=0, column=1, padx=5, pady=5, rowspan=2)
+
+        # Output Text Label to display data
+        window.root.output_text_label2 = ttk.Label(window.root.output_frame, text="Output 2", font=("Arial", 24))
+        window.root.output_text_label2.grid(row = 2, column = 1, padx=5, pady=5)
+
+        window.root.output_text2 = ttk.Label(window.root.output_frame, text='I hate my life', wraplength=675)
+        window.root.output_text2.grid(row=3, column=1, padx=5, pady=5)
 
         # Placeholder for Canvas to display the histogram
         window.root.canvas = None
@@ -413,7 +442,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_popup.resizable(False, False)
 
         # Set the size of the settings window
-        window.root.settings_popup.geometry("400x400")
+        window.root.settings_popup.geometry("400x250")
 
         # Set the icon for the settings window
         window.root.settings_popup.iconbitmap("Icons/settingsiconNEW.ico")
@@ -445,15 +474,15 @@ class App(TKMT.ThemedTKinterFrame):
 
         # Create a label and dropdown for selecting a style theme
         window.root.styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
-        window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
+        #window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
 
         # Available styles
         window.root.styles = "Sun-valley", "Park", "Azure"
 
         # Create the style dropdown menu
         window.root.style_dropdown = ttk.Combobox(settings_frame, state="readonly", values=window.root.styles)
-        window.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
-        window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
+        #indow.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
+        #window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
 
         # Create a label and slider for adjusting precision
         Precision_label = ttk.Label(settings_frame, text="Precision")
@@ -503,6 +532,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.tk.call("set_theme", window.theme)
 
         window.plot_histogram()
+        window.plot_histogram_2()
         window.root.settings_popup.focus_force()
 
 
@@ -558,9 +588,13 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.end_date_dropdown['values'] = dates
         window.root.start_date_dropdown['values'] = dates
 
+        window.root.end_date_dropdown2['values'] = dates
+        window.root.start_date_dropdown2['values'] = dates
+
         # Convert units if necessary
         window.convert_units()
         window.plot_histogram()
+        window.plot_histogram_2()
 
         # Retrieve the selected data type and category
         data_type = window.root.data_dropdown.get()
@@ -569,12 +603,15 @@ class App(TKMT.ThemedTKinterFrame):
         # Handle different data types and categories
         if data_type == "Weather Code":
             # Handle the weather code data type
+            print("handle weath code")
             window.handle_weather_code()
         elif category == "Single":
             # Handle single data category
+            print("handle single")
             window.handle_single_data(data_type)
-        elif category in ["Mean", "Max", "Min", "Median", "Mode"]:
+        elif category in ["Mean", "Max", "Min"]:
             # Handle aggregate data for mean, max, and min categories
+            print("handle agreggate")
             window.handle_aggregate_data(data_type, category)
 
     def units(window):
@@ -679,22 +716,33 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
+        selected_date2 = window.root.start_date_dropdown2.get()
+
 
         # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
             # Find the index of the selected date
             index = dates.index(selected_date)
+            index2 = dates.index(selected_date2)
 
             # Retrieve the weather code associated with the selected date
             weather_code = int(float(weatherCode[index]))
+            weather_code2 = int(float(weatherCode[index2]))
 
             # Call the openMeteoSetup method to get the real weather code
             weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
                                                       window.longitude_set)
 
+            weather_code_real2 = window.openMeteoSetup(index2, index2, "Weather Code", window.latitude_set,
+                                                      window.longitude_set)
+
             # Set the output text with both the input and real weather codes
             window.set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
                               f"Real Weather Code: {int(weather_code_real[0])} - {window.codes[(int(weather_code_real[0]))]}")
+
+            window.set_output2(f"Input Weather Code: {weather_code2} - {window.codes[weather_code2]}\n\n"
+                              f"Real Weather Code: {int(weather_code_real2[0])} - {window.codes[(int(weather_code_real2[0]))]}")
+
 
     def handle_single_data(window, data_type):
         """
@@ -708,6 +756,7 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
+        selected_date2 = window.root.start_date_dropdown2.get()
 
         # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
@@ -726,6 +775,22 @@ class App(TKMT.ThemedTKinterFrame):
                 f"Real {data_type}: {float(real_data):.{window.precision_slider()}f} {window.units()}"
             )
 
+        if selected_date2 in dates:
+            # Find the index of the selected date
+            index2 = dates.index(selected_date2)
+
+            # Retrieve the real data from the external source
+            real_data2 = window.openMeteoSetup(index2, index2, data_type, window.latitude_set, window.longitude_set)
+
+            # Get the input data based on the selected data type
+            input_data2 = window.get_input_data(data_type, index2)
+
+            # Set the output text with formatted input and real data values
+            window.set_output2(
+                f"Input {data_type}: {(float(input_data2)):.{window.precision_slider()}f} {window.units()}\n\n"
+                f"Real {data_type}: {float(real_data2):.{window.precision_slider()}f} {window.units()}"
+            )
+
     def handle_aggregate_data(window, data_type, category):
         """
         Handles the retrieval and display of aggregated data values based on user selection.
@@ -738,18 +803,42 @@ class App(TKMT.ThemedTKinterFrame):
             category: The type of aggregation to perform (e.g., mean, max, min).
         """
         # Get the indices for the start and end dates from the dropdowns
-        if hasattr(window, "start_date_dropdown"):
+        if hasattr(window.root, "start_date_dropdown"):
+            print("has start date")
             start_date = dates.index(window.root.start_date_dropdown.get())
         else:
+            print("no start date")
             start_date = ''
-        if hasattr(window, "end_date_dropdown"):
+        if hasattr(window.root, "end_date_dropdown"):
+            print("has end date")
             end_date = dates.index(window.root.end_date_dropdown.get())
         else:
+            print("no end date")
             end_date = ''
+
+
+        if hasattr(window.root, "start_date_dropdown2"):
+            print("has start date")
+            start_date2 = dates.index(window.root.start_date_dropdown2.get())
+        else:
+            print("no start date")
+            start_date2 = ''
+        if hasattr(window.root, "end_date_dropdown2"):
+            print("has end date: " + window.root.end_date_dropdown2.get())
+            end_date2 = dates.index(window.root.end_date_dropdown2.get())
+        else:
+            print("no end date")
+            end_date2 = ''
+
+
 
         # Calculate the aggregate input data from the user's input list
         input_data = window.calculate_aggregate(
-            window.get_input_data_list(data_type), start_date, end_date, category
+            window.get_input_data_list(data_type, index), start_date, end_date, category
+        )
+        
+        input_data2 = window.calculate_aggregate(
+            window.get_input_data(data_type, index2), start_date2, end_date2, category
         )
 
         # Calculate the aggregate real data from the external source
@@ -760,11 +849,25 @@ class App(TKMT.ThemedTKinterFrame):
             category
         )
 
+        real_data2 = window.calculate_aggregate(
+            window.openMeteoSetup(start_date2, end_date2, data_type, window.latitude_set, window.longitude_set),
+            0,
+            end_date2 - start_date2,
+            category
+        )
+
         # Set the output text with formatted aggregate input and real data values
         window.set_output(
             f"{category} Input {data_type}: {input_data:.{window.precision_slider()}f} {window.units()}\n\n"
             f"{category} Real {data_type}: {real_data:.{window.precision_slider()}f} {window.units()}"
         )
+
+        window.set_output2(
+            f"{category} Input {data_type}: {input_data2:.{window.precision_slider()}f} {window.units()}\n\n"
+            f"{category} Real {data_type}: {real_data2:.{window.precision_slider()}f} {window.units()}"
+        )
+
+
 
     def get_input_data(window, data_type, index):
         """
@@ -862,10 +965,24 @@ class App(TKMT.ThemedTKinterFrame):
         with a specified font size.
 
         Args:
+        """
+        # Configure the output text widget with the new text and font settings
+        print("set outptu one")
+        window.root.output_text.config(text=text, font=("Arial", 20))
+
+    def set_output2(window, text):
+        """
+        Sets the output text in the designated output area of the window.
+
+        This function updates the output text widget to display the provided text
+        with a specified font size.
+
+        Args:
             text: The text to display in the output area.
         """
         # Configure the output text widget with the new text and font settings
-        window.root.output_text.config(text=text, font=("Arial", 20))
+        print("set outptu two")
+        window.root.output_text2.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
         """
@@ -1006,7 +1123,7 @@ class App(TKMT.ThemedTKinterFrame):
                 plot_dates = dates[start_index:end_index]
 
                 # Set color scheme based on mode
-                background = '#1c1c1c'
+                background = '#313131'
                 graph = '#363636'
                 text = '#d1d1d1'
                 grid = '#787878'
@@ -1014,7 +1131,7 @@ class App(TKMT.ThemedTKinterFrame):
 
                 #window.update_styles()
                 if window.theme == "dark":
-                    background = '#1c1c1c'
+                    background = '#313131'
                     graph = '#363636'
                     text = '#d1d1d1'
                     grid = '#787878'
@@ -1026,7 +1143,7 @@ class App(TKMT.ThemedTKinterFrame):
                     grid = '#c2c2c2'
 
                 # Create a new figure and axis for the bar plot
-                fig, ax = plt.subplots(facecolor=background)
+                fig, ax = plt.subplots(facecolor=background, figsize=(4,3))
 
                 # Create bar plot with customized appearance
                 bars = ax.bar(plot_dates, data, color=bar_color, alpha=0.7, edgecolor=text)
@@ -1059,9 +1176,107 @@ class App(TKMT.ThemedTKinterFrame):
                 plt.close()
 
                 # Create a new canvas to display the bar plot
-                window.canvas = FigureCanvasTkAgg(fig, master=window.root.body_frame)
+                window.canvas = FigureCanvasTkAgg(fig, master=window.root.output_frame)
                 window.canvas.draw()
-                window.canvas.get_tk_widget().grid(row=2, column=3, columnspan=2, rowspan=2, pady=10, padx=10)
+                window.canvas.get_tk_widget().grid(row=1, column=0, columnspan=1, rowspan=1, pady=10, padx=10)
+
+    def plot_histogram_2(window):
+        """
+        Plot a bar chart based on selected data type and date range.
+
+        Retrieves the data type, start date, and end date from dropdowns. Constructs a bar chart
+        using matplotlib based on the selected data type and the corresponding data from
+        the start date to the end date.
+
+        Clears the previous plot if it exists and updates the canvas with the new chart.
+        """
+        # Get the selected data type, start date, and end date from the dropdowns
+        data_type = window.root.data_dropdown.get()
+        start_date = window.root.start_date_dropdown2.get()
+        end_date = window.root.end_date_dropdown2.get()
+
+        # Convert units as necessary for the plot
+        window.convert_units()
+
+        # Proceed only if all necessary selections are made
+        if data_type and start_date and end_date:
+            # Determine the indices for the selected date range
+            start_index = dates.index(start_date)
+            end_index = dates.index(end_date) + 1
+
+            # Ensure that the start index is less than the end index
+            if start_index < end_index:
+                # Retrieve the corresponding data for the selected data type
+                data = {
+                    'Weather Code': weatherCode[start_index:end_index],
+                    'Temp Low': temperatureMin[start_index:end_index],
+                    'Temp High': temperatureMax[start_index:end_index],
+                    'Precipitation Amount': precipitationSum[start_index:end_index],
+                    'Wind Speed': windSpeedMax[start_index:end_index],
+                    'Precipitation Probability': precipitationProbabilityMax[start_index:end_index]
+                }[data_type]
+
+                # Convert data to float for plotting
+                data = [float(d) for d in data]
+                plot_dates = dates[start_index:end_index]
+
+                # Set color scheme based on mode
+                background = '#313131'
+                graph = '#363636'
+                text = '#d1d1d1'
+                grid = '#787878'
+                bar_color = '#64b5f6'
+
+                #window.update_styles()
+                if window.theme == "dark":
+                    background = '#313131'
+                    graph = '#363636'
+                    text = '#d1d1d1'
+                    grid = '#787878'
+                    bar_color = '#64b5f6'
+                if window.theme == "light":
+                    background = '#fafafa'
+                    graph = '#f9f9f9'
+                    text = '#212121'
+                    grid = '#c2c2c2'
+
+                # Create a new figure and axis for the bar plot
+                fig, ax = plt.subplots(facecolor=background, figsize=(4,3))
+
+                # Create bar plot with customized appearance
+                bars = ax.bar(plot_dates, data, color=bar_color, alpha=0.7, edgecolor=text)
+
+                ax.set_title(f'{data_type} Over Time')
+                ax.set_xlabel('Date')
+                ax.set_ylabel(f'{data_type} ({window.units()})')
+                ax.title.set_color(text)
+
+                # Rotate x-axis labels for better readability
+                plt.xticks(rotation=45, ha='right')
+
+                # Aesthetic improvements for the plot
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['left'].set_visible(False)
+                ax.spines['bottom'].set_color('#DDDDDD')
+                ax.tick_params(color=text, which='both', axis='both')
+                ax.grid(True, linestyle='--', alpha=0.7, color=grid)
+                ax.set_facecolor(color=graph)
+                ax.xaxis.label.set_color(color=text)
+                ax.yaxis.label.set_color(color=text)
+                plt.xticks(color=text)
+                plt.yticks(color=text)
+
+                # Optimize layout to fit elements nicely
+                fig.tight_layout()
+
+                # Clear the previous plot
+                plt.close()
+
+                # Create a new canvas to display the bar plot
+                window.canvas = FigureCanvasTkAgg(fig, master=window.root.output_frame)
+                window.canvas.draw()
+                window.canvas.get_tk_widget().grid(row=1, column=1, columnspan=1, rowspan=1, pady=10, padx=10)
 
     def openMeteoSetup(window, start_date, end_date, data_type_input, latitude, longitude):
         """
