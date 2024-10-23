@@ -209,6 +209,7 @@ class App(TKMT.ThemedTKinterFrame):
 
         window.root.app_title = ttk.Label(window.root.header_frame, text="Orion Weather App", font=("TkDefaultFont", 22, "bold"))
         window.root.app_title.grid(row=0, column=3, padx=25, pady=5, sticky="EW")
+
     def setup_body(window):
         # Body frame for the notebook widget (tabbed interface)
         window.root.body_frame = ttk.Frame(window.root)
@@ -239,7 +240,12 @@ class App(TKMT.ThemedTKinterFrame):
 
         window.root.output_frame = ttk.Frame(window.root.body_frame)
         window.root.output_frame.grid(row=4, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
-        window.root.output_frame.
+
+        window.root.weather_code_frame_one = ttk.LabelFrame(window.root.output_frame, text="Output 1", padding=(10, 10))
+        window.root.weather_code_frame_one.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', columnspan=3)
+
+        window.root.weather_code_frame_two = ttk.LabelFrame(window.root.output_frame, text="Output 2", padding=(10, 10))
+        window.root.weather_code_frame_two.grid(row=0, column=3, padx=10, pady=10, sticky='NSEW', columnspan=3)
 
         window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
         window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
@@ -277,11 +283,11 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude Entry Field for user to input latitude
-        window.root.lat = ttk.Entry(window.root.body_frame)
+        window.root.lat = ttk.Entry(window.root.input_frame)
         window.root.lat.grid(row=2, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
 
         # Longitude Entry Field for user to input longitude
-        window.root.long = ttk.Entry(window.root.body_frame)
+        window.root.long = ttk.Entry(window.root.input_frame)
         window.root.long.grid(row=3, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
 
         # titles for longitude and latitude boxes
