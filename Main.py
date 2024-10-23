@@ -2,12 +2,9 @@
 # - Tkinter (standard library)
 # - threading (standard library)
 # - Matplotlib - https://matplotlib.org/
-# - OpenMeteo - https://pypi.org/project/open-meteo/
 # - openmeteo_requests - https://pypi.org/project/openmeteo-requests/
 # - requests_cache - https://requests-cache.readthedocs.io/
-# - pandas - https://pandas.pydata.org/
 # - retry_requests - https://pypi.org/project/retry-requests/
-# - requests - https://requests.readthedocs.io/
 # - Flask - https://flask.palletsprojects.com/
 # - psutil - https://pypi.org/project/psutil/
 # - click - https://pypi.org/project/click/
@@ -311,6 +308,11 @@ class App(TKMT.ThemedTKinterFrame):
           # Output Text Label to display data
         window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
         window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
+
+        # Declares the Output Frame
+        window.root.output_frame = ttk.Frame(window.root.body_frame)
+        window.root.output_frame.grid(row=4, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
+        window.root.output_frame
 
         # Placeholder for Canvas to display the histogram
         window.root.canvas = None
@@ -689,22 +691,32 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Get the selected date from the dropdown
         selected_date = window.root.start_date_dropdown.get()
+        selected_date2 = window.root.start_date_dropdown.get2()
+
 
         # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
             # Find the index of the selected date
             index = dates.index(selected_date)
+            index2 = dates.index(selected_date2)
 
             # Retrieve the weather code associated with the selected date
             weather_code = int(float(weatherCode[index]))
+            weather_code2 = int(float(weatherCode[index2]))
 
             # Call the openMeteoSetup method to get the real weather code
             weather_code_real = window.openMeteoSetup(index, index, "Weather Code", window.latitude_set,
                                                       window.longitude_set)
 
+            weather_code_real2 = window.openMeteoSetup(index2, index2, "Weather Code", window.latitude_set,
+                                                      window.longitude_set)
+
             # Set the output text with both the input and real weather codes
             window.set_output(f"Input Weather Code: {weather_code} - {window.codes[weather_code]}\n\n"
                               f"Real Weather Code: {int(weather_code_real[0])} - {window.codes[(int(weather_code_real[0]))]}")
+
+            window.set_output2(f"Input Weather Code: {weather_code2} - {window.codes[weather_code2]}\n\n"
+                              f"Real Weather Code: {int(weather_code_real2[0])} - {window.codes[(int(weather_code_real2[0]))]}")
 
     def handle_single_data(window, data_type):
         """
