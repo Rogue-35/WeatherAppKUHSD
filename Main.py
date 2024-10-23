@@ -888,6 +888,19 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Configure the output text widget with the new text and font settings
         window.root.output_text.config(text=text, font=("Arial", 20))
+    
+    def set_output2(window, text):
+        """
+        Sets the output text in the designated output area of the window.
+
+        This function updates the output text widget to display the provided text
+        with a specified font size.
+
+        Args:
+            text: The text to display in the output area.
+        """
+        # Configure the output text widget with the new text and font settings
+        window.root.output_text2.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
         """
