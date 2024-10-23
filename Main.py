@@ -215,9 +215,8 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.body_frame = ttk.Frame(window.root)
         window.root.body_frame.grid(row=1, column=0, sticky="NWSE")
 
-        window.root.input_frame=ttk.Frame(window.root.body_frame)
+        window.root.input_frame = ttk.Frame(window.root.body_frame)
         window.root.input_frame.grid(row=0, column=0, sticky="NWSE")
-
 
         # Statistics frame within Tab #1 for displaying data
         window.root.start_date_label = ttk.Label(window.root.input_frame, text="Start Date 1")
@@ -237,21 +236,6 @@ class App(TKMT.ThemedTKinterFrame):
 
         window.root.end_date_label = ttk.Label(window.root.input_frame, text="Data Category")
         window.root.end_date_label.grid(row=0, column=0, padx=5, pady=5)
-
-        window.root.output_frame = ttk.Frame(window.root.body_frame)
-        window.root.output_frame.grid(row=4, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
-
-        window.root.weather_code_frame_one = ttk.LabelFrame(window.root.output_frame, text="Output 1", padding=(10, 10))
-        window.root.weather_code_frame_one.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', columnspan=3)
-
-        window.root.weather_code_frame_two = ttk.LabelFrame(window.root.output_frame, text="Output 2", padding=(10, 10))
-        window.root.weather_code_frame_two.grid(row=0, column=3, padx=10, pady=10, sticky='NSEW', columnspan=3)
-
-        window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
-        window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
-
-        window.root.weather_code_frame = ttk.LabelFrame(window.root.body_frame, text="Output", padding=(20, 10))
-        window.root.weather_code_frame.grid(row=4, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
         # Start Date Dropdown for selecting the start date
         window.root.start_date_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
@@ -274,27 +258,27 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.data_cat_dropdown.grid(row=1, column=1, padx=5, pady=5)
 
         # End Date Dropdown
-        window.root.end_date_dropdown = ttk.Combobox(window.root.body_frame, state="readonly")
+        window.root.end_date_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
         window.root.end_date_dropdown.grid(row=1, column=3, padx=5, pady=5)
         window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
 
-        # Output Text Label to display data
-        window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
-        window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
+        window.root.end_date_dropdown2 = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
+        window.root.end_date_dropdown2.grid(row=3, column=3, padx=5, pady=5)
+        window.root.end_date_dropdown2.bind("<<ComboboxSelected>>", window.evaluate)
 
         # Latitude Entry Field for user to input latitude
         window.root.lat = ttk.Entry(window.root.input_frame)
-        window.root.lat.grid(row=2, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
+        window.root.lat.grid(row=3, column=0, padx=5, pady=5, sticky="EW", columnspan=1)
 
         # Longitude Entry Field for user to input longitude
         window.root.long = ttk.Entry(window.root.input_frame)
         window.root.long.grid(row=3, column=1, padx=5, pady=5, sticky="EW", columnspan=1)
 
         # titles for longitude and latitude boxes
-        window.root.long_title = ttk.Label(window.root.body_frame, text="Longitude")
+        window.root.long_title = ttk.Label(window.root.input_frame, text="Longitude")
         window.root.long_title.grid(row=2, column=0, padx=5, pady=5)
-        window.root.lat_title = ttk.Label(window.root.body_frame, text="Latitude")
-        window.root.lat_title.grid(row=3, column=0, padx=5, pady=5)
+        window.root.lat_title = ttk.Label(window.root.input_frame, text="Latitude")
+        window.root.lat_title.grid(row=2, column=1, padx=5, pady=5)
 
         # make the latitude and longitude boxes responsive
         window.root.lat.bind('<0>', window.lat_long_entry, add="+")
