@@ -237,12 +237,6 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.end_date_label = ttk.Label(window.root.input_frame, text="Data Category")
         window.root.end_date_label.grid(row=0, column=0, padx=5, pady=5)
 
-        window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
-        window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
-
-        window.root.weather_code_frame = ttk.LabelFrame(window.root.body_frame, text="Output", padding=(20, 10))
-        window.root.weather_code_frame.grid(row=4, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
-
         # Start Date Dropdown for selecting the start date
         window.root.start_date_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
         window.root.start_date_dropdown.grid(row=1, column=2, padx=5, pady=5, sticky="W")
@@ -271,10 +265,6 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.end_date_dropdown2 = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
         window.root.end_date_dropdown2.grid(row=3, column=3, padx=5, pady=5)
         window.root.end_date_dropdown2.bind("<<ComboboxSelected>>", window.evaluate)
-
-        # Output Text Label to display data
-        window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
-        window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude Entry Field for user to input latitude
         window.root.lat = ttk.Entry(window.root.input_frame)
@@ -311,6 +301,16 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.long.bind('<7>', window.lat_long_entry, add="+")
         window.root.long.bind('<8>', window.lat_long_entry, add="+")
         window.root.long.bind('<9>', window.lat_long_entry, add="+")
+
+        window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
+        window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
+
+        window.root.weather_code_frame = ttk.LabelFrame(window.root.body_frame, text="Output", padding=(20, 10))
+        window.root.weather_code_frame.grid(row=4, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4) 
+          
+          # Output Text Label to display data
+        window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
+        window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Placeholder for Canvas to display the histogram
         window.root.canvas = None
