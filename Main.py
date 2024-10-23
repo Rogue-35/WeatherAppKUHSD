@@ -2,12 +2,9 @@
 # - Tkinter (standard library)
 # - threading (standard library)
 # - Matplotlib - https://matplotlib.org/
-# - OpenMeteo - https://pypi.org/project/open-meteo/
 # - openmeteo_requests - https://pypi.org/project/openmeteo-requests/
 # - requests_cache - https://requests-cache.readthedocs.io/
-# - pandas - https://pandas.pydata.org/
 # - retry_requests - https://pypi.org/project/retry-requests/
-# - requests - https://requests.readthedocs.io/
 # - Flask - https://flask.palletsprojects.com/
 # - psutil - https://pypi.org/project/psutil/
 # - click - https://pypi.org/project/click/
@@ -330,6 +327,11 @@ class App(TKMT.ThemedTKinterFrame):
 
         window.root.output_text2 = ttk.Label(window.root.output_frame, text='', wraplength=675)
         window.root.output_text2.grid(row=3, column=1, padx=5, pady=5)
+
+        # Declares the Output Frame
+        window.root.output_frame = ttk.Frame(window.root.body_frame)
+        window.root.output_frame.grid(row=4, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
+        window.root.output_frame
 
         # Placeholder for Canvas to display the histogram
         window.root.canvas = None
@@ -716,6 +718,7 @@ class App(TKMT.ThemedTKinterFrame):
         selected_date2 = window.root.start_date_dropdown2.get()
 
 
+
         # Check if the selected date is valid and exists in the dates list
         if selected_date in dates:
             # Find the index of the selected date
@@ -739,7 +742,6 @@ class App(TKMT.ThemedTKinterFrame):
 
             window.set_output2(f"Input Weather Code: {weather_code2} - {window.codes[weather_code2]}\n\n"
                               f"Real Weather Code: {int(weather_code_real2[0])} - {window.codes[(int(weather_code_real2[0]))]}")
-
 
     def handle_single_data(window, data_type):
         """
@@ -957,6 +959,19 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Configure the output text widget with the new text and font settings
         window.root.output_text.config(text=text, font=("Arial", 20))
+    
+    def set_output2(window, text):
+        """
+        Sets the output text in the designated output area of the window.
+
+        This function updates the output text widget to display the provided text
+        with a specified font size.
+
+        Args:
+            text: The text to display in the output area.
+        """
+        # Configure the output text widget with the new text and font settings
+        window.root.output_text2.config(text=text, font=("Arial", 20))
 
     def set_output2(window, text):
         """
