@@ -191,6 +191,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.precision_slider_stored = 4  # Default value for decimal precision
         window.setup_widgets()  # Call the function to set up all widgets within the window
 
+   # Creates header for app with upload, close, and settings buttons
     def setup_header(window):
         # Header frame for upload and close buttons
         window.root.header_frame = ttk.Frame(window.root, padding=(20, 10))
@@ -209,8 +210,9 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_button = ttk.Button(window.root.header_frame, text="Settings",
                                                  command=window.settings_window)
         window.root.settings_button.grid(row=0, column=1, padx=5, pady=5)
+   # Creates the main body of the app with dropdown menus that change the data shown
     def setup_body(window):
-        # Body frame for the notebook widget (tabbed interface)
+        # Body frame for the notebook widget 
         window.root.body_frame = ttk.Frame(window.root)
 
         # Statistics frame within Tab #1 for displaying data
