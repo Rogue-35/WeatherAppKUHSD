@@ -183,7 +183,7 @@ class App(TKMT.ThemedTKinterFrame):
                                  'Precipitation Probability']
         window.data_type_list_complete = ['Weather Code', 'Temp Low', 'Temp High', 'Precipitation Amount', 'Wind Speed',
                                           'Precipitation Probability'] # for histogram
-        window.data_cat = ['Max', 'Min', 'Mean', 'Single', "Median", "Mode"]  # Options for how to display data (Max, Min, Average, Single value)
+        window.data_cat = ['Max', 'Min', 'Mean', 'Single']  # Options for how to display data (Max, Min, Average, Single value)
 
         window.precision_slider_stored = 4  # Default value for decimal precision
         window.setup_widgets()  # Call the function to set up all widgets within the window
@@ -318,7 +318,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.graph_label.grid(row=0, column=0, padx=5, pady=5, rowspan=2)
 
         # Output Text Label to display data
-        window.root.output_text = ttk.Label(window.root.output_frame, text='Neil Mcleod', wraplength=675)
+        window.root.output_text = ttk.Label(window.root.output_frame, text='', wraplength=675)
         window.root.output_text.grid(row=3, column=0, padx=5, pady=5)
 
         window.root.graph_label2 = ttk.Label(window.root.output_frame, text="Histogram 2", font=("Arial", 24))
@@ -328,7 +328,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.output_text_label2 = ttk.Label(window.root.output_frame, text="Output 2", font=("Arial", 24))
         window.root.output_text_label2.grid(row = 2, column = 1, padx=5, pady=5)
 
-        window.root.output_text2 = ttk.Label(window.root.output_frame, text='I hate my life', wraplength=675)
+        window.root.output_text2 = ttk.Label(window.root.output_frame, text='', wraplength=675)
         window.root.output_text2.grid(row=3, column=1, padx=5, pady=5)
 
         # Placeholder for Canvas to display the histogram
@@ -603,15 +603,12 @@ class App(TKMT.ThemedTKinterFrame):
         # Handle different data types and categories
         if data_type == "Weather Code":
             # Handle the weather code data type
-            print("handle weath code")
             window.handle_weather_code()
         elif category == "Single":
             # Handle single data category
-            print("handle single")
             window.handle_single_data(data_type)
         elif category in ["Mean", "Max", "Min"]:
             # Handle aggregate data for mean, max, and min categories
-            print("handle agreggate")
             window.handle_aggregate_data(data_type, category)
 
     def units(window):
@@ -804,41 +801,33 @@ class App(TKMT.ThemedTKinterFrame):
         """
         # Get the indices for the start and end dates from the dropdowns
         if hasattr(window.root, "start_date_dropdown"):
-            print("has start date")
             start_date = dates.index(window.root.start_date_dropdown.get())
         else:
-            print("no start date")
             start_date = ''
         if hasattr(window.root, "end_date_dropdown"):
-            print("has end date")
             end_date = dates.index(window.root.end_date_dropdown.get())
         else:
-            print("no end date")
             end_date = ''
 
 
         if hasattr(window.root, "start_date_dropdown2"):
-            print("has start date")
             start_date2 = dates.index(window.root.start_date_dropdown2.get())
         else:
-            print("no start date")
             start_date2 = ''
         if hasattr(window.root, "end_date_dropdown2"):
-            print("has end date: " + window.root.end_date_dropdown2.get())
             end_date2 = dates.index(window.root.end_date_dropdown2.get())
         else:
-            print("no end date")
             end_date2 = ''
 
 
 
         # Calculate the aggregate input data from the user's input list
         input_data = window.calculate_aggregate(
-            window.get_input_data_list(data_type, index), start_date, end_date, category
+            window.get_input_data_list(data_type), start_date, end_date, category
         )
         
         input_data2 = window.calculate_aggregate(
-            window.get_input_data(data_type, index2), start_date2, end_date2, category
+            window.get_input_data_list(data_type), start_date2, end_date2, category
         )
 
         # Calculate the aggregate real data from the external source
@@ -967,7 +956,6 @@ class App(TKMT.ThemedTKinterFrame):
         Args:
         """
         # Configure the output text widget with the new text and font settings
-        print("set outptu one")
         window.root.output_text.config(text=text, font=("Arial", 20))
 
     def set_output2(window, text):
@@ -981,7 +969,6 @@ class App(TKMT.ThemedTKinterFrame):
             text: The text to display in the output area.
         """
         # Configure the output text widget with the new text and font settings
-        print("set outptu two")
         window.root.output_text2.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
