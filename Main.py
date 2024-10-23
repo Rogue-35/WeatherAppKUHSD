@@ -212,44 +212,58 @@ class App(TKMT.ThemedTKinterFrame):
     def setup_body(window):
         # Body frame for the notebook widget (tabbed interface)
         window.root.body_frame = ttk.Frame(window.root)
+        window.root.body_frame.grid(row=1, column=0, sticky="NWSE")
+
+        window.root.input_frame=ttk.Frame(window.root.body_frame)
+        window.root.input_frame.grid(row=0, column=0, sticky="NWSE")
 
 
         # Statistics frame within Tab #1 for displaying data
-        window.root.start_date_label = ttk.Label(window.root.body_frame, text="Start Date")
+        window.root.start_date_label = ttk.Label(window.root.input_frame, text="Start Date 1")
         window.root.start_date_label.grid(row=0, column=2, padx=5, pady=5)
 
-        window.root.end_date_label = ttk.Label(window.root.body_frame, text="End Date")
+        window.root.start_date_label2 = ttk.Label(window.root.input_frame, text="Start Date 2")
+        window.root.start_date_label2.grid(row=2, column=2, padx=5, pady=5)
+
+        window.root.end_date_label = ttk.Label(window.root.input_frame, text="End Date 1")
         window.root.end_date_label.grid(row=0, column=3, padx=5, pady=5)
 
-        window.root.data_type_label = ttk.Label(window.root.body_frame, text="Data Type")
+        window.root.end_date_label2 = ttk.Label(window.root.input_frame, text="End Date 2")
+        window.root.end_date_label2.grid(row=2, column=3, padx=5, pady=5)
+
+        window.root.data_type_label = ttk.Label(window.root.input_frame, text="Data Type")
         window.root.data_type_label.grid(row=0, column=1, padx=5, pady=5)
 
-        window.root.end_date_label = ttk.Label(window.root.body_frame, text="Data Category")
+        window.root.end_date_label = ttk.Label(window.root.input_frame, text="Data Category")
         window.root.end_date_label.grid(row=0, column=0, padx=5, pady=5)
-        
+
         window.root.output_frame = ttk.Frame(window.root.body_frame)
         window.root.output_frame.grid(row=4, column=0, padx=5, pady=5, sticky="NESW", columnspan=5)
         window.root.output_frame.
 
-        window.root.weather_code_frame_one = ttk.LabelFrame(window.root.output_frame, text="Output 1", padding=(10, 10))
-        window.root.weather_code_frame_one.grid(row=0, column=0, padx=10, pady=10, sticky='NSEW', columnspan=3)
+        window.root.graph_label = ttk.Label(window.root.body_frame, text="Graph", wraplength="1", font=("Arial", 24))
+        window.root.graph_label.grid(row=2, column=2, padx=5, pady=5, rowspan=2)
 
-        window.root.weather_code_frame_two = ttk.LabelFrame(window.root.output_frame, text="Output 2", padding=(10, 10))
-        window.root.weather_code_frame_two.grid(row=0, column=3, padx=10, pady=10, sticky='NSEW', columnspan=3)
+        window.root.weather_code_frame = ttk.LabelFrame(window.root.body_frame, text="Output", padding=(20, 10))
+        window.root.weather_code_frame.grid(row=4, column=0, padx=10, pady=10, sticky='NSEW', columnspan=4)
 
         # Start Date Dropdown for selecting the start date
-        window.root.start_date_dropdown = ttk.Combobox(window.root.body_frame, state="readonly", values=dates)
+        window.root.start_date_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
         window.root.start_date_dropdown.grid(row=1, column=2, padx=5, pady=5, sticky="W")
         window.root.start_date_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
 
+        window.root.start_date_dropdown2 = ttk.Combobox(window.root.input_frame, state="readonly", values=dates)
+        window.root.start_date_dropdown2.grid(row=3, column=2, padx=5, pady=5, sticky="W")
+        window.root.start_date_dropdown2.bind("<<ComboboxSelected>>", window.evaluate)
+
         # Data Type Dropdown for selecting the type of data
-        window.root.data_dropdown = ttk.Combobox(window.root.body_frame, state="readonly",
+        window.root.data_dropdown = ttk.Combobox(window.root.input_frame, state="readonly",
                                                  values=window.data_type_list_complete)
         window.root.data_dropdown.grid(row=1, column=0, padx=5, pady=5)
         window.root.data_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
 
         # Data Category Dropdown
-        window.root.data_cat_dropdown = ttk.Combobox(window.root.body_frame, state="readonly", values=window.data_cat)
+        window.root.data_cat_dropdown = ttk.Combobox(window.root.input_frame, state="readonly", values=window.data_cat)
         window.root.data_cat_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
         window.root.data_cat_dropdown.grid(row=1, column=1, padx=5, pady=5)
 
@@ -259,11 +273,8 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.end_date_dropdown.bind("<<ComboboxSelected>>", window.evaluate)
 
         # Output Text Label to display data
-        window.root.output_text_one = ttk.Label(window.root.weather_code_frame_one, text='', wraplength=675)
-        window.root.output_text_one.grid(row=0, column=0, padx=5, pady=5)
-
-        window.root.output_text_two = ttk.Label(window.root.weather_code_frame_one, text='', wraplength=675)
-        window.root.output_text_two.grid(row=0, column=0, padx=5, pady=5)
+        window.root.output_text = ttk.Label(window.root.weather_code_frame, text='', wraplength=675)
+        window.root.output_text.grid(row=0, column=0, padx=5, pady=5)
 
         # Latitude Entry Field for user to input latitude
         window.root.lat = ttk.Entry(window.root.body_frame)
@@ -412,7 +423,7 @@ class App(TKMT.ThemedTKinterFrame):
         window.root.settings_popup.resizable(False, False)
 
         # Set the size of the settings window
-        window.root.settings_popup.geometry("400x250")
+        window.root.settings_popup.geometry("400x400")
 
         # Set the icon for the settings window
         window.root.settings_popup.iconbitmap("Icons/settingsiconNEW.ico")
@@ -443,16 +454,16 @@ class App(TKMT.ThemedTKinterFrame):
         units_switch.grid(row=1, column=0, sticky="W", pady=10)
 
         # Create a label and dropdown for selecting a style theme
-        #window.root.styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
-        #window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
+        window.root.styles_label = ttk.Label(settings_frame, state="readonly", text="Style")
+        window.root.styles_label.grid(row=3, column=0, padx=10, pady=10, sticky="N")
 
         # Available styles
         window.root.styles = "Sun-valley", "Park", "Azure"
 
         # Create the style dropdown menu
         window.root.style_dropdown = ttk.Combobox(settings_frame, state="readonly", values=window.root.styles)
-        #window.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
-        #window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
+        window.root.style_dropdown.bind("<<ComboboxSelected>>", window.update_styles())
+        window.root.style_dropdown.grid(row=4, column=0, padx=10, pady=10, sticky="NSEW")
 
         # Create a label and slider for adjusting precision
         Precision_label = ttk.Label(settings_frame, text="Precision")
@@ -864,7 +875,7 @@ class App(TKMT.ThemedTKinterFrame):
             text: The text to display in the output area.
         """
         # Configure the output text widget with the new text and font settings
-        window.root.output_text_one.config(text=text, font=("Arial", 20))
+        window.root.output_text.config(text=text, font=("Arial", 20))
 
     def write_file(window, input):
         """
