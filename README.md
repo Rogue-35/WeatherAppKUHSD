@@ -1,27 +1,74 @@
-## Acknowledgments
+# KU High School Design Competition (Computer Science) - Weather Application
 
-This project makes use of several open-source libraries and resources:
+This project was developed for the KU High School Design Competition, where our team created a desktop weather application using Python. The application integrates the OpenMeteo Online weather API with Python’s Tkinter and TK Modern themes, offering users historical weather data with a modern interface. Our project leverages REST API requests for data retrieval and Matplotlib for graphing, providing a seamless and interactive user experience. Our team was honored to receive first place at the competition for this innovative approach.
 
-- **Tkinter** - Python binding to the Tk GUI toolkit.
-- **threading** - High-level threading interface.
-- **asyncio** - Asynchronous I/O, event loop, coroutines, and tasks.
-- **Matplotlib** - A comprehensive library for creating static, animated, and interactive visualizations in Python.
-  - Version 3.9.1 - [Matplotlib](https://matplotlib.org/)
-- **OpenMeteo** - A Python client for the Open-Meteo weather API.
-  - Version 0.3.1 - [OpenMeteo](https://pypi.org/project/open-meteo/)
-- **openmeteo_requests** - A Python client for the Open-Meteo weather API using requests.
-  - Version 1.2.0 - [openmeteo_requests](https://pypi.org/project/openmeteo-requests/)
-- **requests_cache** - A transparent persistent cache for the requests library.
-  - Version 1.2.1 - [requests_cache](https://requests-cache.readthedocs.io/)
-- **pandas** - A fast, powerful, flexible, and easy-to-use open-source data analysis and data manipulation library.
-  - Version 2.2.2 - [pandas](https://pandas.pydata.org/)
-- **retry_requests** - A Python library to automatically retry failed HTTP requests using the requests library.
-  - Version 2.0.0 - [retry_requests](https://pypi.org/project/retry-requests/)
-- **requests** - A simple, yet elegant HTTP library.
-  - Version 2.32.3 - [requests](https://requests.readthedocs.io/)
-- **Flask** - A lightweight WSGI web application framework in Python.
-  - Version 3.0.3 - [Flask](https://flask.palletsprojects.com/)
-- **Azure-ttk-theme** - A modern theme for the Tkinter/ttk widgets.
-  - [Azure-ttk-theme](https://github.com/rdbende/Azure-ttk-theme)
+## Project Overview
 
-We are grateful to the developers and contributors of these open-source projects for their invaluable work.
+This weather application enables users to access historical weather data and view it through real-time graphs. Using a variety of Python libraries, the application is designed for smooth data handling, a responsive interface, and robust backend functionality.
+
+### Key Features
+
+- **Historical Weather Data Access:** Connects to the OpenMeteo Online weather API to fetch historical weather information, including temperature, precipitation, and wind speeds for a specified location.
+  
+- **Modern User Interface:** Combines Tkinter with TK Modern Themes, presenting a polished and intuitive user interface. Users can easily input locations and retrieve detailed weather information.
+
+- **Data Caching and Reliable Access:** Utilizes `requests_cache` to cache API responses, reducing redundant calls and improving efficiency. `retry_requests` is implemented to handle intermittent connectivity, providing a stable and consistent data experience.
+
+- **Data Visualization with Matplotlib:** The application integrates Matplotlib to display weather data in visually accessible bar charts, with `FigureCanvasTkAgg` allowing the charts to be embedded directly in the Tkinter interface.
+
+- **Enhanced Performance with Threading:** To improve responsiveness, background threads are used for data retrieval and API calls, preventing interface slowdowns during data processing.
+
+- **System Resource Management with psutil:** The `psutil` library enables system resource monitoring, allowing the application to adjust operations based on resource availability for an optimized performance.
+
+- **Flask-based API Layer:** A lightweight Flask API layer supports advanced interaction with the weather application, enabling RESTful requests and facilitating data exchange with external tools.
+
+### Technology Stack
+
+- **Python Libraries:**
+  - `tkinter` and `ttk` for the core graphical interface
+  - `TKinterModernThemes (TKMT)` for a modernized look and feel
+  - `matplotlib` for plotting weather data
+  - `requests_cache` for efficient data caching
+  - `retry_requests` for request retry handling
+  - `Flask` for creating a RESTful API
+  - `psutil` for managing system resources
+
+- **External API:**
+  - **OpenMeteo Online Weather API** for historical weather data access
+
+### Installation and Setup
+
+To set up and run the application:
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/your-repository/weather-app
+   ```
+
+2. **Install Required Packages:**
+   Ensure Python 3.12 or later is installed. Install the dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the Application:**
+   Launch the application using:
+   ```bash
+   python weather_app.py
+   ```
+
+### Usage
+
+Upon launching the application, users can:
+
+- **Upload Data Files:** Example data files are included in the repository to demonstrate application functionality.
+- **Enter a Location:** Fetch and display historical weather data for specific locations.
+- **Visualize Data:** View graphs and charts generated by Matplotlib, enabling an intuitive look at weather trends.
+- **Access Advanced Options:** Utilize caching, retry logic, and the built-in API layer via Flask for enhanced functionality and RESTful interaction.
+
+### Code Structure
+
+- **Main Application (`weather_app.py`):** Manages the primary UI, handles API calls, and facilitates data visualization.
+- **Flask API Module:** Contains REST API endpoints for application interaction.
+- **Data Cache Management:** Optimizes API data retrieval with `requests_cache`.
+- **Error Handling and Retry Logic:** Provides reliable operation, especially in fluctuating internet conditions.
