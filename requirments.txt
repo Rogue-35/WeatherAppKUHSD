@@ -1,0 +1,9 @@
+tk
+TKinterModernThemes
+matplotlib
+click
+openmeteo_requests
+requests_cache
+retry_requests
+Flask
+psutil
